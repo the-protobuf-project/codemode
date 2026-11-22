@@ -6,117 +6,138 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/the-protobuf-project/codemode/actions/workflows/ci.yaml"><img src="https://github.com/the-protobuf-project/codemode/actions/workflows/ci.yaml/badge.svg" alt="CI"></a>
   <img src="https://img.shields.io/badge/status-work%20in%20progress-orange" alt="Status: work in progress">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache%202.0-blue.svg" alt="License: Apache 2.0"></a>
+  <img src="https://img.shields.io/badge/runtimes-Node%20%7C%20Bun%20%7C%20Deno%20%7C%20Workers-informational" alt="Runtimes">
 </p>
 
 > [!WARNING]
-> **Work in progress.** This project is in the design stage. There is no
-> release yet, and the APIs, annotations and generated code described below
-> may change.
+> **Work in progress.** The plugin, runtime and example work end to end and are
+> tested on Node, Bun and Deno, but nothing is released yet and the APIs may change.
 
 ## Overview
 
 [Code Mode](https://developers.cloudflare.com/agents/tools/codemode/) gives a
-model one tool that runs code, instead of one tool per API call. The model
-writes a short async function against a typed API. A sandbox runs it. The
-function can chain calls, loop, branch and return only the final result.
+model one tool that runs code instead of one tool per API call. The model writes
+a short async function against a typed API; a sandbox runs it. The function can
+chain calls, loop, branch and return only what it needs.
 
-`protoc-gen-codemode` builds that API from the protobuf services you already
-have. One `buf generate` produces:
+`protoc-gen-codemode` builds that API from the protobuf services you already have:
 
-- **TypeScript declarations** the model reads, with typed **inputs and outputs**
-- **A catalog** for `search` and `describe`, so large APIs stay out of the prompt
-- **Connectors** that route sandbox calls to your service, on Cloudflare
-  Workers or in Go
+- **Typed messages** as TypeScript interfaces, with protojson and binary codecs
+- **Clients** over HTTP transcoding (`google.api.http`) or Connect, JSON or binary
+- **Connectors** that expose each service in the sandbox, with approval, replay and rollback
+- **A catalog** and `sandbox.d.ts` that tell the model what it can call, including what comes back
 
-When Code Mode is built from MCP tools, results are usually typed `unknown`,
-because most MCP tools have no output schema. A proto describes the full
-response, so the model knows what it gets back and can chain calls correctly.
+Code Mode built from MCP tools types results as `unknown`, because most MCP tools
+have no output schema. A proto describes the full response, so the model knows
+the result's shape and chains calls correctly.
 
-## How it will work
+## How it works
 
-**1. Annotate** your service. Annotations from
-[`protoc-gen-mcp`](https://github.com/the-protobuf-project/mcp) work as they
-are. `codemode.v1` adds rollback, replay, snippets and the sandbox namespace.
+**1. Annotate.** Annotations from [`protoc-gen-mcp`](https://github.com/the-protobuf-project/mcp)
+work as they are. `codemode.v1` adds rollback, replay, snippets and the sandbox namespace.
 
 ```proto
 service LibraryService {
   option (codemode.v1.service) = { namespace: "library" };
 
-  // Creates a book on a shelf.
   rpc CreateBook(CreateBookRequest) returns (Book) {
+    option (google.api.http) = { post: "/v1/{parent=shelves/*}/books" body: "book" };
     option (codemode.v1.method) = {
       revert: { method: "DeleteBook" fields: { key: "name" value: "result.name" } }
     };
   }
 
-  // Deletes a book.
-  rpc DeleteBook(DeleteBookRequest) returns (google.protobuf.Empty) {
+  rpc ArchiveShelf(ArchiveShelfRequest) returns (ArchiveShelfResponse) {
     option (mcp.v1.tool) = { destructive: true };  // pauses for approval
   }
 }
 ```
 
-**2. Generate** with `buf generate`. The model sees declarations such as:
+**2. Generate** with `buf generate`. Every message gets an interface and a codec:
 
 ```ts
-interface Book {
-  name: `shelves/${string}/books/${string}`;
+export interface Book {
+  name?: BookName;                 // `shelves/${string}/books/${string}`
   title: string;
-  state: "BOOK_STATE_ACTIVE" | "BOOK_STATE_LENT";
-  createTime: string;
+  state?: BookState;               // "BOOK_STATE_AVAILABLE" | "BOOK_STATE_LENT" | ...
+  pageCount?: string;              // 64-bit integers stay exact
+  createTime?: string;             // RFC 3339
 }
-
-declare const library: {
-  /** Creates a book on a shelf. */
-  createBook(input: CreateBookInput): Promise<Book>;
-  /** Deletes a book. Requires approval. */
-  deleteBook(input: { name: `shelves/${string}/books/${string}` }): Promise<void>;
-};
+export const BookCodec: MessageCodec<Book>;  // fromJson, toJson, encode, decode
 ```
 
-**3. Run.** The model writes one function, and the runtime runs it in a
-sandbox:
+**3. Run.** Wire the generated connectors into the runtime and hand the model one tool:
 
 ```ts
-async () => {
-  const book = await library.createBook({
-    parent: "shelves/poetry",
-    book: { title: "Leaves of Grass", state: "BOOK_STATE_ACTIVE" },
-  });
-  return book.name;
-};
+import { createCodemode, httpTransport } from "@the-protobuf-project/codemode";
+import { QuickJSExecutor } from "@the-protobuf-project/codemode/quickjs";
+import { catalog, config, connectors, libraryV1 } from "./gen/index.ts";
+
+const client = new libraryV1.LibraryServiceClient(httpTransport({ baseUrl: "https://library.example.com" }));
+const runtime = createCodemode({ catalog, config, connectors: connectors({ library: client }), executor: new QuickJSExecutor() });
+
+await runtime.execute({ code: `async () => {
+  const page = await library.listBooks({ parent: "shelves/poetry" });
+  return page.books.map((b) => b.title);
+}` });
+// { status: "completed", result: ["Leaves of Grass", "Odes", "Ariel"] }
 ```
 
-## Planned features
+A call that needs approval returns `{ status: "paused", pending: [...] }`;
+`runtime.approve()` resumes it, replaying earlier calls from the log instead of
+running them again. `runtime.rollback()` undoes applied calls through their
+generated reverts.
 
-Our goal is to match every feature of Cloudflare's Code Mode:
+## Features
 
-- [ ] TypeScript declarations that follow protojson, with typed outputs
-- [ ] Progressive discovery with `search` and `describe`
-- [ ] Sandboxed execution with no network access and no credentials
-- [ ] Approval pauses for destructive methods, with durable resume
-- [ ] Replay, `codemode.step()` and rollback through generated `revert` calls
-- [ ] Saved and proto-declared snippets
-- [ ] Execution history, limits, hooks and result truncation
-- [ ] Cloudflare Workers host on top of `@cloudflare/codemode`
-- [ ] Go host using QuickJS on wazero
-- [ ] A Code Mode surface for servers generated by `protoc-gen-mcp`
-- [ ] Configuration through `codemode.yaml`
+| Feature | Where it comes from |
+| --- | --- |
+| Typed inputs **and outputs** | Proto messages, enums, `google.api.resource` names |
+| `search` and `describe` | Generated catalog; progressive or inline discovery |
+| Approval pauses with durable resume | `mcp.v1.tool.destructive`, `mcp.v1.elicitation`, `codemode.v1.method.approval` |
+| Replay and `codemode.step()` | Recorded call log; `codemode.v1.method.replay` |
+| Rollback | `codemode.v1.method.revert` generates the compensating call |
+| Snippets | `codemode.v1.service.snippets`, plus `saveSnippet()` at run time |
+| History, limits, hooks, truncation | Runtime, configured by `codemode.yaml` |
+| Sandboxes | QuickJS (Node, Bun, Deno, browser), Deno subprocess, Cloudflare Worker Loader, iframe |
+| Stores | Memory, SQLite (`bun:sqlite`, `node:sqlite`), Durable Object SQL |
+| Surfaces | Framework-neutral tool, MCP server (`code` or `search` + `execute`), Vercel AI SDK |
+| Allowlisted `fetch` | `executor.outbound: allowlist`; responses replayed with the log |
 
-## Design principles
+## Layout
 
-- **One source of truth.** The proto defines the API, the types and the
-  approval rules.
-- **Reuse, don't fork.** It uses the existing `mcp.v1` annotations and
-  [protokit](https://github.com/the-protobuf-project/protokit).
-- **Credentials stay on the host.** Sandboxed code only sends and receives JSON.
-- **Small files.** No source file is longer than 200 lines.
+```
+protobuf/codemode/v1/      codemode.v1 annotations (protobuf/codemodepb: Go types)
+plugin/                    protoc-gen-codemode, on protokit
+packages/runtime/          @the-protobuf-project/codemode: codecs, transports, sandboxes, runtime
+examples/library/          annotated protos, generated code, an in-memory service, tests
+schema/                    JSON Schema for codemode.yaml
+docs/                      annotations, configuration, generated code, runtime, security
+```
 
-## Contributing
+## Documentation
 
-The project is at an early stage. Issues and design feedback are welcome.
+- [Annotations](docs/annotations.md): what `codemode.v1` adds and how `mcp.v1` is read
+- [Configuration](docs/configuration.md): `codemode.yaml` and plugin parameters
+- [Generated code](docs/generated-code.md): the folder structure and the TypeScript it contains
+- [Runtime](docs/runtime.md): executions, approvals, replay, rollback, executors, stores, MCP
+- [Security](docs/security.md): what the sandbox can and cannot reach
+
+## Development
+
+Requires Go 1.26+, [buf](https://buf.build), Node 22.6+ and [just](https://just.systems);
+Bun and Deno to run those suites.
+
+```sh
+npm install
+just generate        # build the plugin and regenerate examples/library/gen
+just test            # Go tests (including a golden test of the example), type-check, Node tests
+just test-runtimes   # the same TypeScript tests on Bun and Deno
+just lint            # buf lint, go vet, and the 200-line limit on hand-written files
+```
 
 ## License
 
