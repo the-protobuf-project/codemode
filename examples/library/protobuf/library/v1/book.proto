@@ -1,0 +1,87 @@
+// Copyright 2026 The Protobuf Project authors.
+// SPDX-License-Identifier: Apache-2.0
+
+syntax = "proto3";
+
+package library.v1;
+
+import "google/api/field_behavior.proto";
+import "google/api/resource.proto";
+import "google/protobuf/duration.proto";
+import "google/protobuf/timestamp.proto";
+
+// A book on a shelf.
+message Book {
+  option (google.api.resource) = {
+    type: "library.example.com/Book"
+    pattern: "shelves/{shelf}/books/{book}"
+    singular: "book"
+    plural: "books"
+  };
+
+  // A printing of the book.
+  message Edition {
+    // Edition number, starting at 1.
+    int32 number = 1;
+    // Year of publication.
+    int32 year = 2;
+    // Publisher name.
+    string publisher = 3;
+  }
+
+  // The book's resource name.
+  string name = 1 [(google.api.field_behavior) = IDENTIFIER];
+
+  // The book's title.
+  string title = 2 [(google.api.field_behavior) = REQUIRED];
+
+  // Authors, in credit order.
+  repeated string authors = 3;
+
+  // Where the book is in its lending lifecycle.
+  BookState state = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
+
+  // A standard identifier for the book.
+  oneof identifier {
+    // ISBN-13 without dashes.
+    string isbn = 5;
+    // Digital Object Identifier.
+    string doi = 6;
+  }
+
+  // Number of pages.
+  int64 page_count = 7;
+
+  // Average reader rating from 0 to 5.
+  optional double rating = 8;
+
+  // Editions of the book, newest first.
+  repeated Edition editions = 9;
+
+  // Free-form labels, e.g. {"language": "en"}.
+  map<string, string> labels = 10;
+
+  // Who has the book while it is lent out.
+  string borrower = 11 [(google.api.field_behavior) = OUTPUT_ONLY];
+
+  // When a lent book is due back.
+  google.protobuf.Timestamp due_time = 12 [(google.api.field_behavior) = OUTPUT_ONLY];
+
+  // Typical reading time.
+  google.protobuf.Duration reading_time = 13;
+
+  // When the book was added.
+  google.protobuf.Timestamp create_time = 14 [(google.api.field_behavior) = OUTPUT_ONLY];
+}
+
+// Where a book is in its lending lifecycle.
+enum BookState {
+  // Not set.
+  BOOK_STATE_UNSPECIFIED = 0;
+  // On the shelf and available to lend.
+  BOOK_STATE_AVAILABLE = 1;
+  // Lent to a borrower.
+  BOOK_STATE_LENT = 2;
+  // Withdrawn from circulation.
+  BOOK_STATE_ARCHIVED = 3;
+}

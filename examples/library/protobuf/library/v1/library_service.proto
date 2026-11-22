@@ -1,0 +1,321 @@
+// Copyright 2026 The Protobuf Project authors.
+// SPDX-License-Identifier: Apache-2.0
+
+syntax = "proto3";
+
+package library.v1;
+
+import "codemode/v1/annotations.proto";
+import "google/api/annotations.proto";
+import "google/api/client.proto";
+import "google/api/field_behavior.proto";
+import "google/api/resource.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/field_mask.proto";
+import "library/v1/book.proto";
+import "library/v1/shelf.proto";
+import "mcp/v1/annotations.proto";
+
+// Manages the shelves and books of a library, and lends books out.
+service LibraryService {
+  option (google.api.default_host) = "library.example.com";
+  option (codemode.v1.service) = {
+    namespace: "library"
+    instructions: "Shelves hold books. Names look like shelves/{shelf}/books/{book}. Lending a book sets its borrower and due time."
+    snippets: {
+      name: "move_shelf"
+      description: "Moves every book from one shelf to another and returns the moved book names."
+      input_type: "library.v1.MoveShelfInput"
+      code: "async (input) => {\n  const moved = [];\n  let pageToken = \"\";\n  do {\n    const page = await library.listBooks({ parent: input.from, pageToken });\n    for (const book of page.books ?? []) {\n      const result = await library.moveBook({ name: book.name, destination: input.to });\n      moved.push(result.name);\n    }\n    pageToken = page.nextPageToken ?? \"\";\n  } while (pageToken);\n  return moved;\n}"
+    }
+  };
+
+  // Lists shelves, ordered by name.
+  rpc ListShelves(ListShelvesRequest) returns (ListShelvesResponse) {
+    option (google.api.http) = {get: "/v1/shelves"};
+  }
+
+  // Gets a shelf.
+  rpc GetShelf(GetShelfRequest) returns (Shelf) {
+    option (google.api.http) = {get: "/v1/{name=shelves/*}"};
+  }
+
+  // Creates a shelf.
+  rpc CreateShelf(CreateShelfRequest) returns (Shelf) {
+    option (google.api.http) = {
+      post: "/v1/shelves"
+      body: "shelf"
+    };
+    option (codemode.v1.method) = {
+      revert: {
+        method: "DeleteShelf"
+        fields: {
+          key: "name"
+          value: "result.name"
+        }
+        fields: {
+          key: "force"
+          value: "args.force_revert"
+        }
+      }
+    };
+  }
+
+  // Deletes a shelf. Fails if the shelf still holds books unless force is set.
+  rpc DeleteShelf(DeleteShelfRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {delete: "/v1/{name=shelves/*}"};
+    option (codemode.v1.method) = {approval: APPROVAL_NONE};
+  }
+
+  // Lists the books on a shelf.
+  rpc ListBooks(ListBooksRequest) returns (ListBooksResponse) {
+    option (google.api.http) = {get: "/v1/{parent=shelves/*}/books"};
+    option (codemode.v1.method) = {examples: "const page = await library.listBooks({ parent: \"shelves/poetry\", pageSize: 10 });\nreturn page.books.map((b) => b.title);"};
+  }
+
+  // Gets a book.
+  rpc GetBook(GetBookRequest) returns (Book) {
+    option (google.api.http) = {get: "/v1/{name=shelves/*/books/*}"};
+  }
+
+  // Adds a book to a shelf.
+  rpc CreateBook(CreateBookRequest) returns (Book) {
+    option (google.api.http) = {
+      post: "/v1/{parent=shelves/*}/books"
+      body: "book"
+    };
+    option (codemode.v1.method) = {
+      revert: {
+        method: "DeleteBook"
+        fields: {
+          key: "name"
+          value: "result.name"
+        }
+      }
+    };
+  }
+
+  // Updates a book. Only the fields in update_mask change.
+  rpc UpdateBook(UpdateBookRequest) returns (Book) {
+    option (google.api.http) = {
+      patch: "/v1/{book.name=shelves/*/books/*}"
+      body: "book"
+    };
+    option (mcp.v1.tool) = {idempotent: true};
+  }
+
+  // Deletes a book permanently.
+  rpc DeleteBook(DeleteBookRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {delete: "/v1/{name=shelves/*/books/*}"};
+    option (mcp.v1.tool) = {destructive: true};
+    option (codemode.v1.method) = {approval: APPROVAL_NONE};
+  }
+
+  // Lends a book to a borrower until the due time.
+  rpc LendBook(LendBookRequest) returns (Book) {
+    option (google.api.http) = {
+      post: "/v1/{name=shelves/*/books/*}:lend"
+      body: "*"
+    };
+    option (codemode.v1.method) = {
+      revert: {
+        method: "ReturnBook"
+        fields: {
+          key: "name"
+          value: "result.name"
+        }
+      }
+    };
+  }
+
+  // Returns a lent book to its shelf.
+  rpc ReturnBook(ReturnBookRequest) returns (Book) {
+    option (google.api.http) = {
+      post: "/v1/{name=shelves/*/books/*}:return"
+      body: "*"
+    };
+  }
+
+  // Moves a book to another shelf. Asks a librarian first.
+  rpc MoveBook(MoveBookRequest) returns (Book) {
+    option (google.api.http) = {
+      post: "/v1/{name=shelves/*/books/*}:move"
+      body: "*"
+    };
+    option (mcp.v1.elicitation) = {message: "Move this book to another shelf?"};
+  }
+
+  // Withdraws every book on a shelf from circulation. Needs approval.
+  rpc ArchiveShelf(ArchiveShelfRequest) returns (ArchiveShelfResponse) {
+    option (google.api.http) = {
+      post: "/v1/{name=shelves/*}:archive"
+      body: "*"
+    };
+    option (mcp.v1.tool) = {destructive: true};
+  }
+}
+
+// Request for ListShelves.
+message ListShelvesRequest {
+  // Maximum shelves to return; the server may return fewer.
+  int32 page_size = 1;
+  // Token from a previous ListShelves call.
+  string page_token = 2;
+}
+
+// Response for ListShelves.
+message ListShelvesResponse {
+  // The shelves.
+  repeated Shelf shelves = 1;
+  // Token for the next page; empty when there are no more.
+  string next_page_token = 2;
+}
+
+// Request for GetShelf.
+message GetShelfRequest {
+  // The shelf to get.
+  string name = 1 [
+    (google.api.field_behavior) = REQUIRED,
+    (google.api.resource_reference).type = "library.example.com/Shelf"
+  ];
+}
+
+// Request for CreateShelf.
+message CreateShelfRequest {
+  // The shelf to create.
+  Shelf shelf = 1 [(google.api.field_behavior) = REQUIRED];
+  // Chosen ID for the shelf, which becomes the last segment of its name.
+  string shelf_id = 2;
+  // Whether a rollback may delete the shelf even if books were added to it.
+  bool force_revert = 3;
+}
+
+// Request for DeleteShelf.
+message DeleteShelfRequest {
+  // The shelf to delete.
+  string name = 1 [
+    (google.api.field_behavior) = REQUIRED,
+    (google.api.resource_reference).type = "library.example.com/Shelf"
+  ];
+  // Delete the shelf's books too.
+  bool force = 2;
+}
+
+// Request for ListBooks.
+message ListBooksRequest {
+  // The shelf whose books to list.
+  string parent = 1 [
+    (google.api.field_behavior) = REQUIRED,
+    (google.api.resource_reference).type = "library.example.com/Shelf"
+  ];
+  // Maximum books to return; the server may return fewer.
+  int32 page_size = 2;
+  // Token from a previous ListBooks call.
+  string page_token = 3;
+  // Only books in this state.
+  BookState state = 4;
+}
+
+// Response for ListBooks.
+message ListBooksResponse {
+  // The books.
+  repeated Book books = 1;
+  // Token for the next page; empty when there are no more.
+  string next_page_token = 2;
+}
+
+// Request for GetBook.
+message GetBookRequest {
+  // The book to get.
+  string name = 1 [
+    (google.api.field_behavior) = REQUIRED,
+    (google.api.resource_reference).type = "library.example.com/Book"
+  ];
+}
+
+// Request for CreateBook.
+message CreateBookRequest {
+  // The shelf to add the book to.
+  string parent = 1 [
+    (google.api.field_behavior) = REQUIRED,
+    (google.api.resource_reference).type = "library.example.com/Shelf"
+  ];
+  // The book to add.
+  Book book = 2 [(google.api.field_behavior) = REQUIRED];
+}
+
+// Request for UpdateBook.
+message UpdateBookRequest {
+  // The book, with its name set, and the new field values.
+  Book book = 1 [(google.api.field_behavior) = REQUIRED];
+  // Fields to change, e.g. "title,labels".
+  google.protobuf.FieldMask update_mask = 2;
+}
+
+// Request for DeleteBook.
+message DeleteBookRequest {
+  // The book to delete.
+  string name = 1 [
+    (google.api.field_behavior) = REQUIRED,
+    (google.api.resource_reference).type = "library.example.com/Book"
+  ];
+}
+
+// Request for LendBook.
+message LendBookRequest {
+  // The book to lend.
+  string name = 1 [
+    (google.api.field_behavior) = REQUIRED,
+    (google.api.resource_reference).type = "library.example.com/Book"
+  ];
+  // Who is borrowing the book.
+  string borrower = 2 [(google.api.field_behavior) = REQUIRED];
+  // How many days the loan lasts; defaults to 14.
+  int32 days = 3;
+}
+
+// Request for ReturnBook.
+message ReturnBookRequest {
+  // The book being returned.
+  string name = 1 [
+    (google.api.field_behavior) = REQUIRED,
+    (google.api.resource_reference).type = "library.example.com/Book"
+  ];
+}
+
+// Request for MoveBook.
+message MoveBookRequest {
+  // The book to move.
+  string name = 1 [
+    (google.api.field_behavior) = REQUIRED,
+    (google.api.resource_reference).type = "library.example.com/Book"
+  ];
+  // The shelf to move it to.
+  string destination = 2 [
+    (google.api.field_behavior) = REQUIRED,
+    (google.api.resource_reference).type = "library.example.com/Shelf"
+  ];
+}
+
+// Request for ArchiveShelf.
+message ArchiveShelfRequest {
+  // The shelf whose books to archive.
+  string name = 1 [
+    (google.api.field_behavior) = REQUIRED,
+    (google.api.resource_reference).type = "library.example.com/Shelf"
+  ];
+}
+
+// Response for ArchiveShelf.
+message ArchiveShelfResponse {
+  // How many books were archived.
+  int32 archived_count = 1;
+}
+
+// Input for the move_shelf snippet.
+message MoveShelfInput {
+  // The shelf to empty.
+  string from = 1 [(google.api.resource_reference).type = "library.example.com/Shelf"];
+  // The shelf to move books to.
+  string to = 2 [(google.api.resource_reference).type = "library.example.com/Shelf"];
+}

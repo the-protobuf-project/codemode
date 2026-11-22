@@ -1,0 +1,10 @@
+version: v2
+modules:
+  - path: .
+    name: buf.build/the-protobuf-project/codemode
+lint:
+  use:
+    - STANDARD
+breaking:
+  use:
+    - FILE

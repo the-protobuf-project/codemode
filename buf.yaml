@@ -1,0 +1,20 @@
+# Workspace spanning the Code Mode schema and the example that consumes it
+# directly from this repository rather than from the Buf Schema Registry.
+version: v2
+modules:
+  - path: protobuf
+  - path: examples/library/protobuf
+deps:
+  - buf.build/googleapis/googleapis
+  - buf.build/the-protobuf-project/mcp
+# AIP methods return the resource itself and google.protobuf.Empty for deletes,
+# so the buf rules that want a unique response message per RPC do not apply.
+lint:
+  use:
+    - STANDARD
+  except:
+    - RPC_REQUEST_RESPONSE_UNIQUE
+    - RPC_RESPONSE_STANDARD_NAME
+breaking:
+  use:
+    - FILE
