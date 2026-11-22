@@ -34,6 +34,61 @@ Code Mode built from MCP tools types results as `unknown`, because most MCP tool
 have no output schema. A proto describes the full response, so the model knows
 the result's shape and chains calls correctly.
 
+<p align="center">
+  <img src="docs/architecture.svg" alt="How Code Mode works: protos generate typed TypeScript; at run time the model writes one function that a sandbox runs against your services" width="100%">
+</p>
+
+## Try it with Claude
+
+The library example runs as an MCP server on stdio, with one `code` tool. You
+need Node 22.18+ (it runs the TypeScript directly) and the repository:
+
+```sh
+git clone https://github.com/the-protobuf-project/codemode.git
+cd codemode && npm install
+```
+
+**Claude Code**
+
+```sh
+claude mcp add library -- node --conditions=source "$PWD/examples/library/src/mcp.ts"
+```
+
+**Claude Desktop**: add this to `claude_desktop_config.json` (Settings → Developer →
+Edit Config), using absolute paths. Desktop apps do not see your shell's `PATH`,
+so give the full path of `node` (`which node`):
+
+```json
+{
+  "mcpServers": {
+    "library": {
+      "command": "/absolute/path/to/node",
+      "args": ["--conditions=source", "/absolute/path/to/codemode/examples/library/src/mcp.ts"],
+      "env": { "CODEMODE_DB": "/absolute/path/to/library.db" }
+    }
+  }
+}
+```
+
+**Other MCP clients** (Cursor, VS Code, Zed, the MCP Inspector) take the same
+command. To look at the tools first:
+
+```sh
+npx @modelcontextprotocol/inspector node --conditions=source examples/library/src/mcp.ts
+```
+
+Then ask something that needs several calls, for example *"Which shelves have
+books, and lend the shortest poetry book to Ada for a week"*, or *"Archive the
+fiction shelf"* to see an approval pause. `CODEMODE_DB` is optional: set it to
+keep executions in SQLite across restarts. The library itself is in memory and
+resets when the server starts.
+
+> [!NOTE]
+> When the client supports MCP elicitation, approvals are asked there. Otherwise
+> the server returns `paused` and the model resumes with `codemode_approve`, so
+> leave that tool on "ask before running" in your client: its permission prompt
+> is the human approval.
+
 ## How it works
 
 **1. Annotate.** Annotations from [`protoc-gen-mcp`](https://github.com/the-protobuf-project/mcp)
@@ -128,7 +183,7 @@ docs/                      annotations, configuration, generated code, runtime, 
 
 ## Development
 
-Requires Go 1.26+, [buf](https://buf.build), Node 22.6+ and [just](https://just.systems);
+Requires Go 1.26+, [buf](https://buf.build), Node 22.18+ and [just](https://just.systems);
 Bun and Deno to run those suites.
 
 ```sh

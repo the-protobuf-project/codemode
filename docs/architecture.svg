@@ -1,0 +1,118 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 660" width="1200" height="660" role="img" aria-label="How Code Mode works: protos generate typed TypeScript; at run time the model writes one function that a sandbox runs against your services">
+  <title>How Code Mode works</title>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0L10 5L0 10z" fill="#64748b"/>
+    </marker>
+    <marker id="arrow-accent" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0L10 5L0 10z" fill="#f6821f"/>
+    </marker>
+    <style>
+      text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; fill: #0f172a; }
+      .h { font-size: 17px; font-weight: 600; }
+      .b { font-size: 13.5px; fill: #475569; }
+      .band { font-size: 12px; font-weight: 700; letter-spacing: 1.2px; fill: #64748b; }
+      .lbl { font-size: 12.5px; fill: #475569; }
+      .num { font-size: 13px; font-weight: 700; fill: #ffffff; }
+      .box { fill: #ffffff; stroke: #cbd5e1; stroke-width: 1.5; }
+      .accent { fill: #fff4ea; stroke: #f6821f; stroke-width: 2; }
+      .proto { fill: #eef4ff; stroke: #4f7cf7; stroke-width: 2; }
+      .edge { stroke: #64748b; stroke-width: 1.6; fill: none; }
+      .edge-accent { stroke: #f6821f; stroke-width: 2; fill: none; }
+    </style>
+  </defs>
+
+  <rect x="0" y="0" width="1200" height="660" rx="16" fill="#f8fafc"/>
+  <text x="40" y="48" class="h" style="font-size:22px">How Code Mode works</text>
+  <text x="40" y="74" class="b">One proto drives the types the model reads and the calls it is allowed to make.</text>
+
+  <!-- Build time -->
+  <text x="40" y="118" class="band">BUILD TIME</text>
+  <rect x="40" y="132" width="300" height="84" rx="10" class="proto"/>
+  <text x="60" y="164" class="h">.proto + annotations</text>
+  <text x="60" y="188" class="b">mcp.v1 · codemode.v1 · google.api</text>
+
+  <rect x="450" y="132" width="300" height="84" rx="10" class="box"/>
+  <text x="470" y="164" class="h">protoc-gen-codemode</text>
+  <text x="470" y="188" class="b">buf generate · built on protokit</text>
+
+  <rect x="860" y="132" width="300" height="84" rx="10" class="box"/>
+  <text x="880" y="160" class="h">Generated TypeScript</text>
+  <text x="880" y="182" class="b">types · codecs · clients · connectors</text>
+  <text x="880" y="202" class="b">catalog · sandbox.d.ts</text>
+
+  <path d="M340 174H446" class="edge" marker-end="url(#arrow)"/>
+  <path d="M750 174H856" class="edge" marker-end="url(#arrow)"/>
+  <path d="M1070 216V326" class="edge" stroke-dasharray="5 5" marker-end="url(#arrow)"/>
+  <text x="1078" y="270" class="lbl">imported</text>
+
+  <!-- Run time -->
+  <text x="40" y="262" class="band">RUN TIME</text>
+  <rect x="40" y="290" width="210" height="116" rx="10" class="box"/>
+  <text x="60" y="322" class="h">Claude or any LLM</text>
+  <text x="60" y="346" class="b">writes one async</text>
+  <text x="60" y="366" class="b">function against</text>
+  <text x="60" y="386" class="b">sandbox.d.ts</text>
+
+  <rect x="290" y="290" width="200" height="116" rx="10" class="box"/>
+  <text x="310" y="322" class="h">codemode tool</text>
+  <text x="310" y="346" class="b">MCP server or</text>
+  <text x="310" y="366" class="b">AI SDK tool</text>
+  <text x="310" y="386" class="b">{ code } → status</text>
+
+  <rect x="528" y="262" width="416" height="320" rx="14" fill="#fffaf5" stroke="#f6821f" stroke-width="1.5" stroke-dasharray="6 5"/>
+  <text x="548" y="288" class="band" style="fill:#c2620f">CODE MODE RUNTIME</text>
+
+  <rect x="548" y="300" width="176" height="116" rx="10" class="box"/>
+  <text x="566" y="330" class="h">Runtime</text>
+  <text x="566" y="353" class="b">search · describe</text>
+  <text x="566" y="373" class="b">replay log</text>
+  <text x="566" y="393" class="b">rollback · snippets</text>
+
+  <rect x="748" y="300" width="176" height="116" rx="10" class="accent"/>
+  <text x="766" y="330" class="h">Sandbox</text>
+  <text x="766" y="353" class="b">QuickJS · Deno</text>
+  <text x="766" y="373" class="b">Workers · iframe</text>
+  <text x="766" y="393" class="b">no network or secrets</text>
+
+  <rect x="548" y="476" width="176" height="86" rx="10" class="box"/>
+  <text x="566" y="506" class="h">Human approval</text>
+  <text x="566" y="530" class="b">elicitation or API</text>
+
+  <rect x="748" y="476" width="176" height="86" rx="10" class="box"/>
+  <text x="766" y="506" class="h">Store</text>
+  <text x="766" y="530" class="b">SQLite or memory</text>
+  <text x="766" y="550" class="b">Durable Objects</text>
+
+  <rect x="980" y="330" width="180" height="96" rx="10" class="box"/>
+  <text x="998" y="360" class="h">Connectors</text>
+  <text x="998" y="383" class="b">validate with codecs</text>
+  <text x="998" y="403" class="b">hold credentials</text>
+
+  <rect x="980" y="476" width="180" height="86" rx="10" class="proto"/>
+  <text x="998" y="506" class="h">Your services</text>
+  <text x="998" y="530" class="b">gRPC · REST · Connect</text>
+
+  <!-- Flow -->
+  <path d="M250 348H286" class="edge" marker-end="url(#arrow)"/>
+  <path d="M490 348H544" class="edge" marker-end="url(#arrow)"/>
+  <path d="M724 358H744" class="edge-accent" marker-end="url(#arrow-accent)"/>
+  <path d="M924 378H976" class="edge-accent" marker-end="url(#arrow-accent)"/>
+  <path d="M1070 426V472" class="edge" marker-end="url(#arrow)"/>
+  <path d="M612 416V472" class="edge" marker-end="url(#arrow)"/>
+  <path d="M660 472V420" class="edge" marker-end="url(#arrow)"/>
+  <path d="M700 416V446H836V472" class="edge" marker-end="url(#arrow)"/>
+  <text x="1078" y="455" class="lbl">HTTP / Connect</text>
+  <text x="604" y="464" class="lbl" text-anchor="end">pauses</text>
+  <text x="668" y="464" class="lbl">resumes</text>
+
+  <circle cx="268" cy="330" r="12" fill="#f6821f"/><text x="268" y="335" class="num" text-anchor="middle">1</text>
+  <circle cx="734" cy="336" r="12" fill="#f6821f"/><text x="734" y="341" class="num" text-anchor="middle">2</text>
+  <circle cx="950" cy="356" r="12" fill="#f6821f"/><text x="950" y="361" class="num" text-anchor="middle">3</text>
+  <circle cx="1056" cy="450" r="12" fill="#f6821f"/><text x="1056" y="455" class="num" text-anchor="middle">4</text>
+  <circle cx="590" cy="436" r="12" fill="#f6821f"/><text x="590" y="441" class="num" text-anchor="middle">5</text>
+
+  <!-- Legend -->
+  <text x="40" y="616" class="b" xml:space="preserve"><tspan font-weight="700" fill="#c2620f">1</tspan> The model writes code against typed declarations   <tspan font-weight="700" fill="#c2620f">2</tspan> The runtime runs it in a sandbox   <tspan font-weight="700" fill="#c2620f">3</tspan> Calls cross the bridge to connectors</text>
+  <text x="40" y="640" class="b" xml:space="preserve"><tspan font-weight="700" fill="#c2620f">4</tspan> Connectors validate arguments and call your service   <tspan font-weight="700" fill="#c2620f">5</tspan> Destructive calls pause for a person; approval replays the code from the log</text>
+</svg>
