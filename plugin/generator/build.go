@@ -66,7 +66,7 @@ func (cat *Catalog) addEnum(e *protogen.Enum) {
 		Desc:    e.Desc,
 		Package: p,
 		Name:    name,
-		File:    p.Dir + "/enums/" + fileStem(name) + ".ts",
+		Path:    p.Dir + "/enums/" + fileStem(name),
 		Source:  e.Desc.ParentFile().Path(),
 		Doc:     enumDoc(e.Desc, comment(e.Comments)),
 	}
@@ -88,7 +88,7 @@ func (cat *Catalog) addMessage(m *protogen.Message) {
 		Desc:    m.Desc,
 		Package: p,
 		Name:    name,
-		File:    p.Dir + "/messages/" + fileStem(name) + ".ts",
+		Path:    p.Dir + "/messages/" + fileStem(name),
 		Source:  m.Desc.ParentFile().Path(),
 		Doc:     comment(m.Comments),
 	}
@@ -98,8 +98,8 @@ func (cat *Catalog) addMessage(m *protogen.Message) {
 
 // typeRef resolves an RPC input or output type.
 func (cat *Catalog) typeRef(m *protogen.Message) (TypeRef, error) {
-	if wk := lookupWellKnown(m.Desc.FullName()); wk != nil {
-		return TypeRef{WKT: wk}, nil
+	if isWellKnown(m.Desc.FullName()) {
+		return TypeRef{WKT: m.Desc.FullName()}, nil
 	}
 	if msg := cat.byMessage[m.Desc.FullName()]; msg != nil {
 		return TypeRef{Message: msg}, nil

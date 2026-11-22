@@ -10,7 +10,7 @@ func jsonReader(f *tsFile, fd *Field) string {
 	switch {
 	case fd.Enum != nil:
 		return "protojson.enumOf(" + codecOf(f, fd) + ")"
-	case fd.Message != nil || fd.WKT != nil:
+	case fd.Message != nil || fd.WKT != "":
 		return "protojson.message(" + codecOf(f, fd) + ")"
 	}
 	return "protojson." + scalars[fd.Desc.Kind()].JSON
@@ -70,7 +70,7 @@ func oneofChecks(m *Message) []struct{ Name, Fields string } {
 // jsonOut converts one element value v to protojson.
 func jsonOut(f *tsFile, fd *Field, v string) string {
 	switch {
-	case fd.Message != nil || fd.WKT != nil:
+	case fd.Message != nil || fd.WKT != "":
 		return codecOf(f, fd) + ".toJson(" + v + ", options)"
 	case scalars[fd.Desc.Kind()].Float:
 		return "protojson.floatOut(" + v + ")"

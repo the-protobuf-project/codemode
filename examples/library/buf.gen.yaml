@@ -11,4 +11,5 @@ plugins:
     strategy: all
     opt:
       - config=examples/library/codemode.yaml
+      - lang=typescript
       - runtime_prefix=@the-protobuf-project/

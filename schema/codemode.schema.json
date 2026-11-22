@@ -6,15 +6,28 @@
   "type": "object",
   "additionalProperties": false,
   "properties": {
-    "version": { "const": "v1" },
+    "version": {
+      "const": "v1"
+    },
     "include": {
       "type": "array",
-      "items": { "type": "string" },
+      "items": {
+        "type": "string"
+      },
       "description": "Service full-name globs to expose, e.g. library.v1.*. Default: all."
     },
-    "exclude": { "type": "array", "items": { "type": "string" }, "description": "Service full-name globs to hide." },
+    "exclude": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Service full-name globs to hide."
+    },
     "naming": {
-      "enum": ["lowerCamel", "snake"],
+      "enum": [
+        "lowerCamel",
+        "snake"
+      ],
       "default": "lowerCamel",
       "description": "Sandbox method names: library.createBook or library.create_book."
     },
@@ -23,12 +36,18 @@
       "additionalProperties": false,
       "properties": {
         "destructive": {
-          "enum": ["require", "allow"],
+          "enum": [
+            "require",
+            "allow"
+          ],
           "default": "require",
           "description": "Whether destructive methods pause for approval."
         },
         "elicitation": {
-          "enum": ["require", "allow"],
+          "enum": [
+            "require",
+            "allow"
+          ],
           "default": "require",
           "description": "Whether methods with mcp.v1.elicitation pause for approval."
         },
@@ -40,19 +59,12 @@
       }
     },
     "discovery": {
-      "enum": ["progressive", "inline"],
+      "enum": [
+        "progressive",
+        "inline"
+      ],
       "default": "progressive",
       "description": "progressive: namespaces in the tool description, types through describe(). inline: every type in the description."
-    },
-    "import_extension": {
-      "type": "string",
-      "default": ".ts",
-      "description": "Extension on relative imports: .ts for Node, Bun and Deno; .js for compiled output; empty for bundlers."
-    },
-    "runtime_prefix": {
-      "type": "string",
-      "default": "@the-protobuf-project/",
-      "description": "Prefix of the runtime-ts package names; generated code imports <prefix>protobuf, <prefix>network and <prefix>codemode."
     },
     "executor": {
       "type": "object",
@@ -63,11 +75,23 @@
           "default": "30s",
           "description": "Deadline for each sandbox pass, as a Go duration."
         },
-        "memory_mb": { "type": "integer", "minimum": 1, "default": 64 },
-        "outbound": { "enum": ["none", "allowlist"], "default": "none" },
+        "memory_mb": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 64
+        },
+        "outbound": {
+          "enum": [
+            "none",
+            "allowlist"
+          ],
+          "default": "none"
+        },
         "allow": {
           "type": "array",
-          "items": { "type": "string" },
+          "items": {
+            "type": "string"
+          },
           "description": "Hosts reachable when outbound is allowlist."
         }
       }
@@ -76,16 +100,56 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "max_executions": { "type": "integer", "minimum": 1, "default": 50 },
-        "paused_ttl": { "type": "string", "default": "24h" },
-        "max_value_bytes": { "type": "integer", "minimum": 1, "default": 1000000 },
-        "result_budget_tokens": { "type": "integer", "minimum": 1, "default": 6000 }
+        "max_executions": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 50
+        },
+        "paused_ttl": {
+          "type": "string",
+          "default": "24h"
+        },
+        "max_value_bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1000000
+        },
+        "result_budget_tokens": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 6000
+        }
       }
     },
     "mcp": {
       "type": "object",
       "additionalProperties": false,
-      "properties": { "expose": { "enum": ["code", "search_execute"], "default": "code" } }
+      "properties": {
+        "expose": {
+          "enum": [
+            "code",
+            "search_execute"
+          ],
+          "default": "code"
+        }
+      }
+    },
+    "typescript": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Options of the TypeScript output (lang=typescript).",
+      "properties": {
+        "import_extension": {
+          "type": "string",
+          "default": ".ts",
+          "description": "Extension on relative imports: .ts for Node, Bun and Deno; .js for compiled output; empty for bundlers."
+        },
+        "runtime_prefix": {
+          "type": "string",
+          "default": "@the-protobuf-project/",
+          "description": "Prefix of the runtime-ts package names; generated code imports <prefix>protobuf, <prefix>network and <prefix>codemode."
+        }
+      }
     }
   }
 }

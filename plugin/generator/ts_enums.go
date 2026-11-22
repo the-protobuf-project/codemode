@@ -39,7 +39,7 @@ func enumDecl(e *Enum, name, export string) string {
 
 // emitEnum writes enums/<name>.ts: the union type and its codec.
 func (cat *Catalog) emitEnum(gen *protogen.Plugin, e *Enum) {
-	f := cat.newFile(e.File, e.Source)
+	f := cat.newFile(e.Path, e.Source)
 	f.runtime("enumCodec")
 	f.runtimeType("EnumCodec")
 	f.render("enum.ts.tpl", struct {
@@ -67,7 +67,7 @@ func resourceDecl(r *Resource, name, export string) string {
 // emitResource writes resources/<name>.ts: the name type, and a value of the
 // same name that formats and parses it.
 func (cat *Catalog) emitResource(gen *protogen.Plugin, r *Resource) {
-	f := cat.newFile(r.File, "")
+	f := cat.newFile(r.Path, "")
 	f.notes = []string{"resource: " + r.Type}
 	f.runtime("resourceName")
 	f.runtimeType("ResourceName")

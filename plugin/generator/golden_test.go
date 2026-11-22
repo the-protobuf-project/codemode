@@ -48,6 +48,8 @@ func generateLibrary(t *testing.T, param string) *pluginpb.CodeGeneratorResponse
 		switch name {
 		case "config":
 			opts.Config = value
+		case "lang":
+			opts.Lang = value
 		case "runtime_prefix":
 			opts.RuntimePrefix = value
 		}
@@ -68,7 +70,7 @@ func generateLibrary(t *testing.T, param string) *pluginpb.CodeGeneratorResponse
 }
 
 func TestGoldenLibrary(t *testing.T) {
-	res := generateLibrary(t, "config=../../examples/library/codemode.yaml,runtime_prefix=@the-protobuf-project/")
+	res := generateLibrary(t, "lang=typescript,config=../../examples/library/codemode.yaml,runtime_prefix=@the-protobuf-project/")
 	seen := map[string]bool{}
 	for _, f := range res.GetFile() {
 		seen[f.GetName()] = true
@@ -98,11 +100,11 @@ func TestGoldenLibrary(t *testing.T) {
 
 func TestImportExtensionOption(t *testing.T) {
 	ext := ".js"
-	cfg := &Config{ImportExtension: &ext}
-	if got := relImport("library/v1/messages/book.ts", "library/v1/enums/book_state.ts", cfg.Extension()); got != "../enums/book_state.js" {
+	cfg := &Config{TypeScript: TSConfig{ImportExtension: &ext}}
+	if got := relImport("library/v1/messages/book", "library/v1/enums/book_state", cfg.Extension()); got != "../enums/book_state.js" {
 		t.Errorf("relImport = %q", got)
 	}
-	if got := relImport("index.ts", "library/v1/index.ts", ""); got != "./library/v1/index" {
+	if got := relImport("index", "library/v1/index", ""); got != "./library/v1/index" {
 		t.Errorf("relImport = %q", got)
 	}
 }

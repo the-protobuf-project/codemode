@@ -14,7 +14,8 @@ annotations:
 # Run once over the whole API: search and the sandbox span every service.
 strategy: all
 
-# Parameters: config=<codemode.yaml>, import_extension=.ts|.js|none,
+# Parameters: lang=typescript|all (default typescript), config=<codemode.yaml>,
+# and for TypeScript import_extension=.ts|.js|none and
 # runtime_prefix=<prefix of the runtime-ts package names>.
 outputs:
   - "**/messages/*.ts"

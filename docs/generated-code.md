@@ -90,7 +90,7 @@ Worker, or a test.
 ## Templates
 
 The layout of every generated file lives in
-[`plugin/generator/templates`](../plugin/generator/templates), one `*.tpl` per
+[`plugin/generator/templates/typescript`](../plugin/generator/templates/typescript), one `*.tpl` per
 file kind, embedded in the plugin:
 
 | Template | Writes |
@@ -109,3 +109,29 @@ struct; templates arrange it. `interface.tpl`, `enum.tpl`, `resource.tpl` and
 type reads the same in both. To change the output, edit a template, run
 `just generate`, and commit the regenerated example: the golden test fails until
 they match.
+
+## Languages
+
+The plugin takes a `lang` option, like `protoc-gen-mcp`: `typescript` (alias
+`ts`) is the default and, for now, the only language; `all` expands to every
+supported one, and anything else fails with the list of supported languages.
+
+The model the generator builds (services, methods, approval, replay, revert,
+resources, paths without extensions, well-known types by proto name) is
+language-neutral. Each language is a `Language` in
+[`languages.go`](../plugin/generator/languages.go) with its emitters in
+`<lang>_*.go` and its layouts in `templates/<lang>/`, and its options in its
+own section of `codemode.yaml` (`typescript:` today).
+
+To add a host language, say Go once a Go Code Mode runtime exists:
+
+1. Implement `Language` in `go_language.go` and add it to `languages`.
+2. Write its emitters in `go_*.go`, mapping proto and well-known types to Go.
+3. Put its layouts in `templates/go/*.tpl` and embed them.
+4. Add a `go:` section to `Config` and the JSON Schema for its options.
+5. Add an example and a golden test for its output.
+
+Sandboxed code is JavaScript whatever the host, so every language describes the
+sandbox API with the same TypeScript declarations (`sandbox.d.ts` and the
+catalog's types); only the host side (codecs, clients, connectors, wiring)
+changes per language.

@@ -40,7 +40,7 @@ func quoteAll(vals []string, quote func(string) string) string {
 // emitCatalog writes codemode/catalog.ts, the data search() and describe()
 // read, and codemode/sandbox.d.ts, the same declarations as one file.
 func (cat *Catalog) emitCatalog(gen *protogen.Plugin) {
-	f := cat.newFile("codemode/catalog.ts", "")
+	f := cat.newFile("codemode/catalog", "")
 	f.notes = []string{"The sandbox API: every namespace, method and type the model can use."}
 	f.runtimeType("Catalog")
 	var v struct {
@@ -108,7 +108,7 @@ func (cat *Catalog) emitConfig(gen *protogen.Plugin) {
 	c := cat.Config
 	timeout, _ := Millis(c.Executor.Timeout)
 	ttl, _ := Millis(c.Runtime.PausedTTL)
-	f := cat.newFile("codemode/config.ts", "")
+	f := cat.newFile("codemode/config", "")
 	f.notes = []string{"Runtime settings from codemode.yaml."}
 	f.runtimeType("CodemodeConfig")
 	f.render("config.ts.tpl", struct {

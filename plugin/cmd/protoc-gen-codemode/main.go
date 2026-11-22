@@ -34,14 +34,16 @@ func main() {
 		return
 	}
 	var flags flag.FlagSet
+	lang := flags.String("lang", "typescript", `Languages to generate, comma-separated, or "all". Supported: typescript (alias ts).`)
 	config := flags.String("config", "", "Path to codemode.yaml, relative to where buf runs.")
-	ext := flags.String("import_extension", ".ts", `Extension on relative imports: ".ts", ".js" or "none".`)
-	runtimePrefix := flags.String("runtime_prefix", "", `Prefix of the runtime package names; code imports <prefix>protobuf, <prefix>network and <prefix>codemode.`)
+	// TypeScript options.
+	ext := flags.String("import_extension", ".ts", `TypeScript: extension on relative imports: ".ts", ".js" or "none".`)
+	runtimePrefix := flags.String("runtime_prefix", "", `TypeScript: prefix of the runtime package names; code imports <prefix>protobuf, <prefix>network and <prefix>codemode.`)
 
 	generator.PluginVersion = resolveVersion()
 
 	generator.Run(protogen.Options{ParamFunc: flags.Set}, func(gen *protogen.Plugin) error {
-		opts := generator.Options{Config: *config, RuntimePrefix: *runtimePrefix}
+		opts := generator.Options{Lang: *lang, Config: *config, RuntimePrefix: *runtimePrefix}
 		set := false
 		flags.Visit(func(f *flag.Flag) { set = set || f.Name == "import_extension" })
 		if set {

@@ -12,20 +12,20 @@ import (
 // emitPackageIndex writes <package>/index.ts: every type and service in the
 // package, and registration of its codecs for google.protobuf.Any.
 func (cat *Catalog) emitPackageIndex(gen *protogen.Plugin, p *Package) {
-	f := cat.newFile(p.Dir+"/index.ts", "")
+	f := cat.newFile(p.Dir+"/index", "")
 	f.notes = []string{"package: " + string(p.Name)}
 	var files []string
 	for _, m := range p.Messages {
-		files = append(files, m.File)
+		files = append(files, m.Path)
 	}
 	for _, e := range p.Enums {
-		files = append(files, e.File)
+		files = append(files, e.Path)
 	}
 	for _, r := range p.Resources {
-		files = append(files, r.File)
+		files = append(files, r.Path)
 	}
 	for _, s := range p.Services {
-		files = append(files, s.Dir+"/index.ts")
+		files = append(files, s.Dir+"/index")
 	}
 	sort.Strings(files)
 	exports := make([]string, len(files))
@@ -34,7 +34,7 @@ func (cat *Catalog) emitPackageIndex(gen *protogen.Plugin, p *Package) {
 	}
 	var codecs []string
 	for _, m := range p.Messages {
-		f.local(m.File, m.Codec())
+		f.local(m.Path, m.Codec())
 		codecs = append(codecs, m.Codec())
 	}
 	if len(codecs) > 0 {
@@ -57,14 +57,14 @@ type packageRef struct {
 // emitCodemodeIndex writes codemode/index.ts, which builds every connector
 // from service implementations, and the root index.ts.
 func (cat *Catalog) emitCodemodeIndex(gen *protogen.Plugin) {
-	f := cat.newFile("codemode/index.ts", "")
+	f := cat.newFile("codemode/index", "")
 	f.notes = []string{"Wires generated connectors into the Code Mode runtime."}
 	f.runtimeType("Connector", "ConnectorOptions")
 	ext := cat.Config.Extension()
 	var services []serviceRef
 	for _, s := range cat.Services {
-		f.localType(s.Dir+"/service.ts", s.Name)
-		f.local(s.Dir+"/connector.ts", s.connectorFunc())
+		f.localType(s.Dir+"/service", s.Name)
+		f.local(s.Dir+"/connector", s.connectorFunc())
 		services = append(services, serviceRef{s.Namespace, s.Name, s.connectorFunc()})
 	}
 	f.render("codemode_index.ts.tpl", struct {
@@ -73,7 +73,7 @@ func (cat *Catalog) emitCodemodeIndex(gen *protogen.Plugin) {
 	}{"./catalog" + ext, "./config" + ext, services})
 	f.emit(gen)
 
-	root := cat.newFile("index.ts", "")
+	root := cat.newFile("index", "")
 	var packages []packageRef
 	for _, p := range cat.Packages {
 		packages = append(packages, packageRef{lowerFirstWord(pascal(string(p.Name))), "./" + p.Dir + "/index" + ext})

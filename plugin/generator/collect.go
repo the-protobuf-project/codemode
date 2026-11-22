@@ -53,7 +53,7 @@ type collector struct {
 
 func (c *collector) addMessage(m *protogen.Message) {
 	name := m.Desc.FullName()
-	if m.Desc.IsMapEntry() || lookupWellKnown(name) != nil || c.messages[name] != nil {
+	if m.Desc.IsMapEntry() || isWellKnown(name) || c.messages[name] != nil {
 		if m.Desc.IsMapEntry() {
 			c.addFields(m)
 		}

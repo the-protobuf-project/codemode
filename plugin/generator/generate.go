@@ -18,9 +18,10 @@ import (
 
 // Options are the plugin parameters from buf.gen.yaml.
 type Options struct {
-	Config          string // path to codemode.yaml
-	ImportExtension *string
-	RuntimePrefix   string // prefix of the runtime package names
+	Lang            string  // comma-separated languages, or "all"; default "typescript"
+	Config          string  // path to codemode.yaml
+	ImportExtension *string // TypeScript: extension on relative imports
+	RuntimePrefix   string  // TypeScript: prefix of the runtime package names
 }
 
 // ProtoSource builds the catalog from the CodeGeneratorRequest.
@@ -39,45 +40,30 @@ func (s ProtoSource) Build(ctx factory.Ctx) (*Catalog, error) {
 		return nil, err
 	}
 	if s.Options.ImportExtension != nil {
-		cfg.ImportExtension = s.Options.ImportExtension
+		cfg.TypeScript.ImportExtension = s.Options.ImportExtension
 	}
 	if s.Options.RuntimePrefix != "" {
-		cfg.RuntimePrefix = s.Options.RuntimePrefix
+		cfg.TypeScript.RuntimePrefix = s.Options.RuntimePrefix
 	}
 	return Build(ctx.Plugin, cfg)
 }
 
-// Target renders the catalog as TypeScript.
+// Target renders the catalog in one of the supported languages.
 type Target struct{}
 
 // Name identifies the target in a factory registry.
 func (Target) Name() string { return "codemode" }
 
 // Languages lists the languages the target emits.
-func (Target) Languages() []string { return []string{"typescript"} }
+func (Target) Languages() []string { return languageNames() }
 
-// Generate writes every file of the generated codebase.
-func (Target) Generate(ctx factory.Ctx, cat *Catalog, _ string) error {
-	gen := ctx.Plugin
-	for _, p := range cat.Packages {
-		for _, m := range p.Messages {
-			cat.emitMessage(gen, m)
-		}
-		for _, e := range p.Enums {
-			cat.emitEnum(gen, e)
-		}
-		for _, r := range p.Resources {
-			cat.emitResource(gen, r)
-		}
-		for _, s := range p.Services {
-			cat.emitService(gen, s)
-		}
-		cat.emitPackageIndex(gen, p)
+// Generate writes one language's codebase.
+func (Target) Generate(ctx factory.Ctx, cat *Catalog, lang string) error {
+	l := findLanguage(lang)
+	if l == nil {
+		return fmt.Errorf("unsupported language %q", lang)
 	}
-	cat.emitCatalog(gen)
-	cat.emitConfig(gen)
-	cat.emitCodemodeIndex(gen)
-	return nil
+	return l.Generate(ctx.Plugin, cat)
 }
 
 // Generate runs the plugin over one CodeGeneratorRequest.
@@ -92,9 +78,18 @@ func Generate(gen *protogen.Plugin, opts Options) error {
 	reg.AddSource(ProtoSource{Options: opts})
 	reg.AddTarget(Target{})
 	ctx := factory.Ctx{Plugin: gen}
+	langs, err := resolveLanguages(opts.Lang)
+	if err != nil {
+		return err
+	}
 	cat, err := reg.Sources["proto"].Build(ctx)
 	if err != nil {
 		return err
 	}
-	return reg.Targets["codemode"].Generate(ctx, cat, "typescript")
+	for _, l := range langs {
+		if err := reg.Targets["codemode"].Generate(ctx, cat, l.Name()); err != nil {
+			return fmt.Errorf("%s: %w", l.Name(), err)
+		}
+	}
+	return nil
 }

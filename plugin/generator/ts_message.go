@@ -62,7 +62,7 @@ func messageNotes(m *Message) []string {
 
 // emitMessage writes messages/<name>.ts: the interface and its codec.
 func (cat *Catalog) emitMessage(gen *protogen.Plugin, m *Message) {
-	f := cat.newFile(m.File, m.Source)
+	f := cat.newFile(m.Path, m.Source)
 	n := moduleNamer{f}
 	f.runtime("protojson", "BinaryWriter", "BinaryReader")
 	f.runtimeType("MessageCodec", "JsonObject")
@@ -86,14 +86,14 @@ func (cat *Catalog) emitMessage(gen *protogen.Plugin, m *Message) {
 func codecOf(f *tsFile, fd *Field) string {
 	switch {
 	case fd.Message != nil:
-		f.local(fd.Message.File, fd.Message.Codec())
+		f.local(fd.Message.Path, fd.Message.Codec())
 		return fd.Message.Codec()
 	case fd.Enum != nil:
-		f.local(fd.Enum.File, fd.Enum.Codec())
+		f.local(fd.Enum.Path, fd.Enum.Codec())
 		return fd.Enum.Codec()
-	case fd.WKT != nil:
-		f.runtime(fd.WKT.Codec)
-		return fd.WKT.Codec
+	case fd.WKT != "":
+		f.runtime(tsWKT(fd.WKT).Codec)
+		return tsWKT(fd.WKT).Codec
 	}
 	return ""
 }
@@ -110,9 +110,9 @@ func access(fd *Field) string {
 func presentCheck(f *tsFile, fd *Field) string {
 	a := access(fd)
 	switch {
-	case fd.WKT != nil && fd.WKT.Codec == "ValueCodec":
+	case fd.WKT != "" && tsWKT(fd.WKT).Codec == "ValueCodec":
 		return a + " !== undefined"
-	case fd.Message != nil || fd.WKT != nil:
+	case fd.Message != nil || fd.WKT != "":
 		return a + " != null"
 	case fd.Explicit:
 		return a + " !== undefined"

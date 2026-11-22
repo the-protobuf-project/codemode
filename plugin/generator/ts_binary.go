@@ -11,7 +11,7 @@ import (
 
 // writeElem returns the statement that writes one element v as field no.
 func writeElem(f *tsFile, fd *Field, no int, v string) string {
-	if fd.Message != nil || fd.WKT != nil {
+	if fd.Message != nil || fd.WKT != "" {
 		f.runtime("binary")
 		return fmt.Sprintf("binary.message(w, %d, %s, %s)", no, codecOf(f, fd), v)
 	}
@@ -35,7 +35,7 @@ func binaryIn(f *tsFile, fd *Field, v string) string {
 // readElem returns the expression that reads one element from reader r.
 func readElem(f *tsFile, fd *Field, r string, n typeNamer) string {
 	switch {
-	case fd.Message != nil || fd.WKT != nil:
+	case fd.Message != nil || fd.WKT != "":
 		f.runtime("binary")
 		return "binary.readMessage(" + r + ", " + codecOf(f, fd) + ")"
 	case fd.Enum != nil:
@@ -154,7 +154,7 @@ func decodeCases(f *tsFile, m *Message, n moduleNamer) []decodeCase {
 
 // mapValueZero is the value a map entry gets when its value is missing.
 func mapValueZero(f *tsFile, fd *Field, n typeNamer) string {
-	if fd.Message != nil || fd.WKT != nil {
+	if fd.Message != nil || fd.WKT != "" {
 		return codecOf(f, fd) + ".decode(new Uint8Array(0))"
 	}
 	return zero(f, fd, n)
