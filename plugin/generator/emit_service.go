@@ -7,86 +7,96 @@ import (
 	"google.golang.org/protobuf/compiler/protogen"
 )
 
+// serviceView is the data of service.ts.tpl, client.ts.tpl and
+// connector.ts.tpl.
+type serviceView struct {
+	Doc, Name, TypeName, Namespace, Instructions, Func string
+	Methods                                            []methodView
+}
+
+// methodView is one RPC, with every name and type already resolved and
+// imported for the file it is rendered into.
+type methodView struct {
+	Doc, Name, Client, RPC  string
+	Input, Output           string
+	InputCodec, OutputCodec string
+	HTTP, Idempotency       string
+	Approval                bool
+	Replay, ApprovalMsg     string
+	Revert                  *revertView
+}
+
+// viewParts says which parts of a method a file uses, so it imports only those.
+type viewParts struct {
+	types, codecs, reverts bool
+}
+
+// newServiceView resolves a service for one file, importing what it names.
+func newServiceView(f *tsFile, s *Service, parts viewParts) serviceView {
+	n := moduleNamer{f}
+	v := serviceView{
+		Doc: jsdoc("", s.Doc), Name: s.Name, TypeName: string(s.Proto.Desc.FullName()),
+		Namespace: s.Namespace, Instructions: s.Instructions, Func: s.connectorFunc(),
+	}
+	for _, m := range s.Methods {
+		mv := methodView{
+			Doc: jsdoc("  ", m.Doc), Name: m.Name, Client: m.Client(), RPC: string(m.Proto.Desc.Name()),
+			Idempotency: methodIdempotency(m.Proto.Desc),
+			Approval:    m.Approval, Replay: m.Replay, ApprovalMsg: m.ApprovalMsg,
+		}
+		if parts.types {
+			mv.Input, mv.Output = refType(m.Input, n), refType(m.Output, n)
+		}
+		if parts.codecs {
+			mv.InputCodec, mv.OutputCodec = refCodec(f, m.Input), refCodec(f, m.Output)
+		}
+		if h := m.HTTP; h != nil {
+			mv.HTTP = "{ method: " + tsString(h.Method) + ", path: " + tsString(h.Path)
+			if h.Body != "" {
+				mv.HTTP += ", body: " + tsString(h.Body)
+			}
+			if h.ResponseBody != "" {
+				mv.HTTP += ", responseBody: " + tsString(h.ResponseBody)
+			}
+			mv.HTTP += " }"
+		}
+		if parts.reverts && m.Revert != nil {
+			mv.Revert = newRevertView(n, m.Revert)
+		}
+		v.Methods = append(v.Methods, mv)
+	}
+	return v
+}
+
 // emitService writes services/<name>/: the service interface and descriptor,
 // a client over any transport, the Code Mode connector and an index.
 func (cat *Catalog) emitService(gen *protogen.Plugin, s *Service) {
-	cat.emitServiceInterface(gen, s)
-	cat.emitClient(gen, s)
-	cat.emitConnector(gen, s)
-	f := cat.newFile(s.Dir+"/index.ts", s.Source)
-	f.P("export * from ", tsString("./service"+cat.Config.Extension()), ";")
-	f.P("export * from ", tsString("./client"+cat.Config.Extension()), ";")
-	f.P("export * from ", tsString("./connector"+cat.Config.Extension()), ";")
-	f.emit(gen)
-}
+	ext := cat.Config.Extension()
 
-func (cat *Catalog) emitServiceInterface(gen *protogen.Plugin, s *Service) {
 	f := cat.newFile(s.Dir+"/service.ts", s.Source)
-	n := moduleNamer{f}
 	f.runtimeType("CallOptions", "MethodDescriptor")
-	f.body.WriteString(jsdoc("", s.Doc))
-	f.P("export interface ", s.Name, " {")
-	for i, m := range s.Methods {
-		if i > 0 {
-			f.P()
-		}
-		f.body.WriteString(jsdoc("  ", m.Doc))
-		f.P("  ", m.Client(), "(request: ", refType(m.Input, n), ", options?: CallOptions): Promise<", refType(m.Output, n), ">;")
-	}
-	f.P("}")
-	f.P()
-	f.P("/** Describes each {@link ", s.Name, "} RPC for transports. */")
-	f.P("export const ", s.Name, "Descriptor = {")
-	f.P("  typeName: ", tsString(string(s.Proto.Desc.FullName())), ",")
-	f.P("  methods: {")
-	for _, m := range s.Methods {
-		f.P("    ", m.Client(), ": {")
-		f.P("      service: ", tsString(string(s.Proto.Desc.FullName())), ",")
-		f.P("      name: ", tsString(string(m.Proto.Desc.Name())), ",")
-		f.P("      input: ", refCodec(f, m.Input), ",")
-		f.P("      output: ", refCodec(f, m.Output), ",")
-		if h := m.HTTP; h != nil {
-			http := "{ method: " + tsString(h.Method) + ", path: " + tsString(h.Path)
-			if h.Body != "" {
-				http += ", body: " + tsString(h.Body)
-			}
-			if h.ResponseBody != "" {
-				http += ", responseBody: " + tsString(h.ResponseBody)
-			}
-			f.P("      http: ", http, " },")
-		}
-		if level := methodIdempotency(m.Proto.Desc); level != "" {
-			f.P("      idempotency: ", tsString(level), ",")
-		}
-		f.P("    } satisfies MethodDescriptor<", refType(m.Input, n), ", ", refType(m.Output, n), ">,")
-	}
-	f.P("  },")
-	f.P("} as const;")
+	f.render("service.ts.tpl", newServiceView(f, s, viewParts{types: true, codecs: true}))
 	f.emit(gen)
-}
 
-func (cat *Catalog) emitClient(gen *protogen.Plugin, s *Service) {
-	f := cat.newFile(s.Dir+"/client.ts", s.Source)
-	n := moduleNamer{f}
-	f.runtimeType("CallOptions", "Transport")
-	f.local(s.Dir+"/service.ts", s.Name+"Descriptor")
-	f.localType(s.Dir+"/service.ts", s.Name)
-	f.P("/** Calls {@link ", s.Name, "} over a transport: HTTP, Connect, or a service binding. */")
-	f.P("export class ", s.Name, "Client implements ", s.Name, " {")
-	f.P("  readonly transport: Transport;")
-	f.P()
-	f.P("  constructor(transport: Transport) {")
-	f.P("    this.transport = transport;")
-	f.P("  }")
-	for _, m := range s.Methods {
-		f.P()
-		f.body.WriteString(jsdoc("  ", m.Doc))
-		f.P("  ", m.Client(), "(request: ", refType(m.Input, n), ", options?: CallOptions): Promise<", refType(m.Output, n), "> {")
-		f.P("    return this.transport.unary(", s.Name, "Descriptor.methods.", m.Client(), ", request, options);")
-		f.P("  }")
-	}
-	f.P("}")
-	f.emit(gen)
+	c := cat.newFile(s.Dir+"/client.ts", s.Source)
+	c.runtimeType("CallOptions", "Transport")
+	c.local(s.Dir+"/service.ts", s.Name+"Descriptor")
+	c.localType(s.Dir+"/service.ts", s.Name)
+	c.render("client.ts.tpl", newServiceView(c, s, viewParts{types: true}))
+	c.emit(gen)
+
+	k := cat.newFile(s.Dir+"/connector.ts", s.Source)
+	k.runtime("connector", "unaryMethod")
+	k.runtimeType("Connector", "ConnectorOptions")
+	k.localType(s.Dir+"/service.ts", s.Name)
+	k.render("connector.ts.tpl", newServiceView(k, s, viewParts{codecs: true, reverts: true}))
+	k.emit(gen)
+
+	i := cat.newFile(s.Dir+"/index.ts", s.Source)
+	i.render("service_index.ts.tpl", struct{ Service, Client, Connector string }{
+		"./service" + ext, "./client" + ext, "./connector" + ext,
+	})
+	i.emit(gen)
 }
 
 // refCodec imports and returns the codec of an RPC input or output.

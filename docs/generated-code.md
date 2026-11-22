@@ -86,3 +86,26 @@ const binding = new LibraryServiceClient(connectTransport({ baseUrl: "https://in
 `connectHandler([{ descriptor: LibraryServiceDescriptor, impl }])` serves an
 implementation over Connect as a fetch handler: `Bun.serve`, `Deno.serve`, a
 Worker, or a test.
+
+## Templates
+
+The layout of every generated file lives in
+[`plugin/generator/templates`](../plugin/generator/templates), one `*.tpl` per
+file kind, embedded in the plugin:
+
+| Template | Writes |
+| --- | --- |
+| `message.ts.tpl`, `interface.tpl` | `messages/<name>.ts`: the interface and its codec |
+| `enum.ts.tpl`, `enum.tpl` | `enums/<name>.ts` |
+| `resource.ts.tpl`, `resource.tpl` | `resources/<name>.ts` |
+| `service.ts.tpl`, `client.ts.tpl`, `connector.ts.tpl`, `service_index.ts.tpl` | `services/<name>/` |
+| `package_index.ts.tpl`, `codemode_index.ts.tpl`, `root_index.ts.tpl` | the `index.ts` files |
+| `catalog.ts.tpl`, `config.ts.tpl`, `sandbox.d.ts.tpl`, `sandbox.tpl` | `codemode/` |
+
+Templates are presentation only. The generator resolves every name, type and
+expression, adds the imports they need, and passes the result in as a view
+struct; templates arrange it. `interface.tpl`, `enum.tpl`, `resource.tpl` and
+`sandbox.tpl` define blocks shared by the module files and `sandbox.d.ts`, so a
+type reads the same in both. To change the output, edit a template, run
+`just generate`, and commit the regenerated example: the golden test fails until
+they match.

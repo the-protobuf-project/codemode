@@ -16,18 +16,10 @@ func jsonReader(f *tsFile, fd *Field) string {
 	return "protojson." + scalars[fd.Desc.Kind()].JSON
 }
 
-// emitFromJSON writes fromJson: validate protojson, fill defaults.
-func emitFromJSON(f *tsFile, m *Message, n moduleNamer) {
-	f.runtime("protojson")
-	f.P("  fromJson(json: unknown, path: string = ", tsString(string(m.Desc.FullName())), "): ", m.Name, " {")
-	if len(m.Fields) == 0 {
-		f.P("    protojson.object(json, path);")
-		f.P("    return {};")
-		f.P("  },")
-		return
-	}
-	f.P("    const o = protojson.object(json, path);")
-	f.P("    const m: ", m.Name, " = {")
+// fromJSONFields is each property of the object fromJson builds: read the
+// protojson value, then fill the default or require it.
+func fromJSONFields(f *tsFile, m *Message, n moduleNamer) []keyExpr {
+	var out []keyExpr
 	for _, fd := range m.Fields {
 		var reader string
 		switch {
@@ -38,7 +30,8 @@ func emitFromJSON(f *tsFile, m *Message, n moduleNamer) {
 		default:
 			reader = jsonReader(f, fd)
 		}
-		expr := reader + "(protojson.get(o, " + tsString(fd.JSONName) + ", " + tsString(fd.ProtoName) + "), path + " + tsString("."+fd.JSONName) + ")"
+		path := "path + " + tsString("."+fd.JSONName)
+		expr := reader + "(protojson.get(o, " + tsString(fd.JSONName) + ", " + tsString(fd.ProtoName) + "), " + path + ")"
 		switch {
 		case fd.MapKey != nil:
 			expr += " ?? {}"
@@ -47,7 +40,7 @@ func emitFromJSON(f *tsFile, m *Message, n moduleNamer) {
 		case !fd.Explicit && isScalar(fd):
 			expr += " ?? " + zero(f, fd, n)
 		case fd.Required && !isScalar(fd):
-			expr += " ?? protojson.missing(path + " + tsString("."+fd.JSONName) + ")"
+			expr += " ?? protojson.missing(" + path + ")"
 		}
 		if fd.Resource != nil && fd.MapKey == nil {
 			cast := tsType(fd, n)
@@ -56,18 +49,22 @@ func emitFromJSON(f *tsFile, m *Message, n moduleNamer) {
 			}
 			expr = "(" + expr + ") as " + cast
 		}
-		f.P("      ", propertyKey(fd.JSONName), ": ", expr, ",")
+		out = append(out, keyExpr{propertyKey(fd.JSONName), expr})
 	}
-	f.P("    };")
+	return out
+}
+
+// oneofChecks lists each oneof and its member names, for protojson.oneof.
+func oneofChecks(m *Message) []struct{ Name, Fields string } {
+	var out []struct{ Name, Fields string }
 	for _, o := range m.Oneofs {
 		names := make([]string, len(o.Fields))
 		for i, of := range o.Fields {
 			names[i] = tsString(of.JSONName)
 		}
-		f.P("    protojson.oneof(m, path, ", tsString(o.Name), ", [", strings.Join(names, ", "), "]);")
+		out = append(out, struct{ Name, Fields string }{o.Name, strings.Join(names, ", ")})
 	}
-	f.P("    return m;")
-	f.P("  },")
+	return out
 }
 
 // jsonOut converts one element value v to protojson.
@@ -81,33 +78,22 @@ func jsonOut(f *tsFile, fd *Field, v string) string {
 	return v
 }
 
-// emitToJSON writes toJson: protojson with default values left out, or, with
-// emitDefaults, written out, which is what sandboxed code receives.
-func emitToJSON(f *tsFile, m *Message) {
-	f.runtimeType("JsonObject", "ToJsonOptions")
-	if len(m.Fields) == 0 {
-		f.P("  toJson(): JsonObject {")
-		f.P("    return {};")
-		f.P("  },")
-		return
-	}
-	f.P("  toJson(m: ", m.Name, ", options?: ToJsonOptions): JsonObject {")
-	if usesDefaults(m) {
-		f.P("    const all = options?.emitDefaults === true;")
-	}
-	f.P("    const o: JsonObject = {};")
+// toJSONLines is one statement per field: protojson with default values left
+// out or, with emitDefaults, written out, which is what sandboxed code gets.
+func toJSONLines(f *tsFile, m *Message) []string {
+	var out []string
 	for _, fd := range m.Fields {
 		a := access(fd)
 		key := "o[" + tsString(fd.JSONName) + "]"
 		switch {
 		case fd.MapKey != nil:
-			f.P("    if (all || protojson.nonEmpty(", a, ")) ", key, " = protojson.mapOut(", a, " ?? {}, (v) => ", jsonOut(f, fd.MapValue, "v"), ");")
+			out = append(out, "if (all || protojson.nonEmpty("+a+")) "+key+" = protojson.mapOut("+a+" ?? {}, (v) => "+jsonOut(f, fd.MapValue, "v")+");")
 		case fd.Desc.IsList():
-			out := a + " ?? []"
+			value := a + " ?? []"
 			if conv := jsonOut(f, fd, "v"); conv != "v" {
-				out = "(" + out + ").map((v) => " + conv + ")"
+				value = "(" + value + ").map((v) => " + conv + ")"
 			}
-			f.P("    if (all || ", a, "?.length) ", key, " = ", out, ";")
+			out = append(out, "if (all || "+a+"?.length) "+key+" = "+value+";")
 		case !fd.Explicit && isScalar(fd):
 			cond := presentCheck(f, fd)
 			if strings.Contains(cond, " ") {
@@ -117,13 +103,12 @@ func emitToJSON(f *tsFile, m *Message) {
 			if conv := jsonOut(f, fd, "v"); conv != "v" {
 				value = jsonOut(f, fd, value)
 			}
-			f.P("    if (all || ", cond, ") ", key, " = ", value, ";")
+			out = append(out, "if (all || "+cond+") "+key+" = "+value+";")
 		default:
-			f.P("    if (", presentCheck(f, fd), ") ", key, " = ", jsonOut(f, fd, a), ";")
+			out = append(out, "if ("+presentCheck(f, fd)+") "+key+" = "+jsonOut(f, fd, a)+";")
 		}
 	}
-	f.P("    return o;")
-	f.P("  },")
+	return out
 }
 
 // usesDefaults reports whether toJson writes a field that emitDefaults affects:

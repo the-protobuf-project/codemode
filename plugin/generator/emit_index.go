@@ -5,7 +5,6 @@ package generator
 
 import (
 	"sort"
-	"strings"
 
 	"google.golang.org/protobuf/compiler/protogen"
 )
@@ -29,20 +28,30 @@ func (cat *Catalog) emitPackageIndex(gen *protogen.Plugin, p *Package) {
 		files = append(files, s.Dir+"/index.ts")
 	}
 	sort.Strings(files)
-	for _, file := range files {
-		f.P("export * from ", tsString(relImport(f.path, file, cat.Config.Extension())), ";")
+	exports := make([]string, len(files))
+	for i, file := range files {
+		exports[i] = relImport(f.path, file, cat.Config.Extension())
 	}
-	if len(p.Messages) > 0 {
-		codecs := make([]string, len(p.Messages))
-		for i, m := range p.Messages {
-			f.local(m.File, m.Codec())
-			codecs[i] = m.Codec()
-		}
+	var codecs []string
+	for _, m := range p.Messages {
+		f.local(m.File, m.Codec())
+		codecs = append(codecs, m.Codec())
+	}
+	if len(codecs) > 0 {
 		f.runtime("registerTypes")
-		f.P()
-		f.P("registerTypes([", strings.Join(codecs, ", "), "]);")
 	}
+	f.render("package_index.ts.tpl", struct{ Exports, Codecs []string }{exports, codecs})
 	f.emit(gen)
+}
+
+// serviceRef is one namespace in codemode/index.ts.
+type serviceRef struct {
+	Namespace, Name, Connector string
+}
+
+// packageRef is one package re-exported by the root index.ts.
+type packageRef struct {
+	Alias, Path string
 }
 
 // emitCodemodeIndex writes codemode/index.ts, which builds every connector
@@ -52,33 +61,26 @@ func (cat *Catalog) emitCodemodeIndex(gen *protogen.Plugin) {
 	f.notes = []string{"Wires generated connectors into the Code Mode runtime."}
 	f.runtimeType("Connector", "ConnectorOptions")
 	ext := cat.Config.Extension()
-	f.P("export { catalog } from ", tsString("./catalog"+ext), ";")
-	f.P("export { config } from ", tsString("./config"+ext), ";")
-	f.P()
-	f.P("/** The implementation behind each sandbox namespace: a generated client or your own object. */")
-	f.P("export interface Services {")
+	var services []serviceRef
 	for _, s := range cat.Services {
 		f.localType(s.Dir+"/service.ts", s.Name)
-		f.P("  ", s.Namespace, ": ", s.Name, ";")
-	}
-	f.P("}")
-	f.P()
-	f.P("/** Builds the connector for every namespace. */")
-	f.P("export function connectors(services: Services, options: { [K in keyof Services]?: ConnectorOptions } = {}): Connector[] {")
-	f.P("  return [")
-	for _, s := range cat.Services {
 		f.local(s.Dir+"/connector.ts", s.connectorFunc())
-		f.P("    ", s.connectorFunc(), "(services.", s.Namespace, ", options.", s.Namespace, "),")
+		services = append(services, serviceRef{s.Namespace, s.Name, s.connectorFunc()})
 	}
-	f.P("  ];")
-	f.P("}")
+	f.render("codemode_index.ts.tpl", struct {
+		Catalog, Config string
+		Services        []serviceRef
+	}{"./catalog" + ext, "./config" + ext, services})
 	f.emit(gen)
 
 	root := cat.newFile("index.ts", "")
+	var packages []packageRef
 	for _, p := range cat.Packages {
-		alias := lowerFirstWord(pascal(string(p.Name)))
-		root.P("export * as ", alias, " from ", tsString("./"+p.Dir+"/index"+ext), ";")
+		packages = append(packages, packageRef{lowerFirstWord(pascal(string(p.Name))), "./" + p.Dir + "/index" + ext})
 	}
-	root.P("export * from ", tsString("./codemode/index"+ext), ";")
+	root.render("root_index.ts.tpl", struct {
+		Packages []packageRef
+		Codemode string
+	}{packages, "./codemode/index" + ext})
 	root.emit(gen)
 }

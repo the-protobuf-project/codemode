@@ -30,14 +30,6 @@ func (cat *Catalog) newFile(path, source string) *tsFile {
 	return &tsFile{cat: cat, path: path, source: source, imports: map[string]map[string]bool{}}
 }
 
-// P writes its arguments followed by a newline.
-func (f *tsFile) P(v ...any) {
-	for _, x := range v {
-		fmt.Fprint(&f.body, x)
-	}
-	f.body.WriteByte('\n')
-}
-
 func (f *tsFile) add(spec, name string, typeOnly bool) {
 	set := f.imports[spec]
 	if set == nil {
