@@ -2,14 +2,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
 // Serves the library over MCP on stdio, as one `code` tool. Point an MCP
-// client at `node --conditions=source examples/library/src/mcp.ts`.
+// client at `node examples/library/src/mcp.ts`.
 // Executions are kept in SQLite, so paused ones survive a restart.
 
 import { DatabaseSync } from "node:sqlite";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { createCodemode, SqliteStore, type SqliteDatabase } from "@the-protobuf-project/codemode";
-import { createMcpServer } from "@the-protobuf-project/codemode/mcp";
-import { QuickJSExecutor } from "@the-protobuf-project/codemode/quickjs";
+import { createCodemode, SqliteStore, type SqliteDatabase } from "@the-protobuf-project/runtime/codemode";
+import { createMcpServer } from "@the-protobuf-project/runtime/codemode/mcp";
+import { QuickJSExecutor } from "@the-protobuf-project/runtime/codemode/quickjs";
 import { catalog, config, connectors } from "../gen/index.ts";
 import { InMemoryLibrary } from "./library.ts";
 

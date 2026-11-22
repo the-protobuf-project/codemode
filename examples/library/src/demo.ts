@@ -4,8 +4,8 @@
 // Walks through Code Mode against the in-memory library: a read, an approval
 // pause, resume, and rollback. Run with `npm run demo`.
 
-import { createCodemode, type CodeOutput } from "@the-protobuf-project/codemode";
-import { QuickJSExecutor } from "@the-protobuf-project/codemode/quickjs";
+import { createCodemode, type CodeOutput } from "@the-protobuf-project/runtime/codemode";
+import { QuickJSExecutor } from "@the-protobuf-project/runtime/codemode/quickjs";
 import { catalog, config, connectors } from "../gen/index.ts";
 import { InMemoryLibrary } from "./library.ts";
 

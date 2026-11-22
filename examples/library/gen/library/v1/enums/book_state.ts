@@ -6,7 +6,7 @@
 //
 // codemode — https://github.com/the-protobuf-project/codemode
 
-import { type EnumCodec, enumCodec } from "@the-protobuf-project/codemode";
+import { type EnumCodec, enumCodec } from "@the-protobuf-project/runtime/protobuf";
 
 /** Where a book is in its lending lifecycle. */
 export type BookState =

@@ -16,7 +16,7 @@ import {
   WireType,
   binary,
   protojson,
-} from "@the-protobuf-project/codemode";
+} from "@the-protobuf-project/runtime/protobuf";
 import { type Book, BookCodec } from "./book.ts";
 
 /** Request for UpdateBook. */

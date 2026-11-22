@@ -14,7 +14,7 @@ import {
   type ToJsonOptions,
   WireType,
   protojson,
-} from "@the-protobuf-project/codemode";
+} from "@the-protobuf-project/runtime/protobuf";
 import type { ShelfName } from "../resources/shelf_name.ts";
 
 /** Input for the move_shelf snippet. */

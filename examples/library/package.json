@@ -5,17 +5,18 @@
   "description": "LibraryService exposed through Code Mode: generated code, an in-memory server, and end-to-end tests.",
   "scripts": {
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "demo": "node --conditions=source src/demo.ts",
-    "mcp": "node --conditions=source src/mcp.ts",
-    "test": "node --conditions=source --test test/*.test.ts",
+    "demo": "node src/demo.ts",
+    "mcp": "node src/mcp.ts",
+    "test": "node --test test/*.test.ts",
     "test:bun": "bun test ./test",
-    "test:deno": "deno test --no-check --allow-read --allow-env --allow-run --conditions=source test/"
+    "test:deno": "deno test --no-check --allow-read --allow-env --allow-run test/"
   },
   "dependencies": {
-    "@the-protobuf-project/codemode": "*"
+    "@the-protobuf-project/runtime": "github:the-protobuf-project/runtime-ts#0b1fa1053b6bbd13eb597433cac7ab9c5872b080",
+    "@modelcontextprotocol/sdk": "^1.32.2",
+    "quickjs-emscripten": "^0.32.0"
   },
   "devDependencies": {
-    "@modelcontextprotocol/sdk": "^1.32.2",
     "@types/node": "^26.6.6",
     "typescript": "^7.0.2"
   }

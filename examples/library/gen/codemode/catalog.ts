@@ -7,7 +7,7 @@
 //
 // codemode — https://github.com/the-protobuf-project/codemode
 
-import type { Catalog } from "@the-protobuf-project/codemode";
+import type { Catalog } from "@the-protobuf-project/runtime/codemode";
 
 export const catalog: Catalog = {
   prelude: `/** Any JSON value. */

@@ -14,7 +14,7 @@ import {
   type ToJsonOptions,
   WireType,
   protojson,
-} from "@the-protobuf-project/codemode";
+} from "@the-protobuf-project/runtime/protobuf";
 
 /** Response for ArchiveShelf. */
 export interface ArchiveShelfResponse {

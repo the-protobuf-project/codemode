@@ -6,7 +6,8 @@
 //
 // codemode — https://github.com/the-protobuf-project/codemode
 
-import type { CallOptions, Empty, Transport } from "@the-protobuf-project/codemode";
+import type { CallOptions, Transport } from "@the-protobuf-project/runtime/network";
+import type { Empty } from "@the-protobuf-project/runtime/protobuf";
 import type { ArchiveShelfRequest } from "../../messages/archive_shelf_request.ts";
 import type { ArchiveShelfResponse } from "../../messages/archive_shelf_response.ts";
 import type { Book } from "../../messages/book.ts";

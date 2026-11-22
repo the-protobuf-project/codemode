@@ -1,7 +1,8 @@
 // Copyright 2026 The Protobuf Project authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { CodemodeError, type Empty } from "@the-protobuf-project/codemode";
+import { CodemodeError } from "@the-protobuf-project/runtime/errors";
+import type { Empty } from "@the-protobuf-project/runtime/protobuf";
 import { libraryV1 } from "../gen/index.ts";
 
 type Book = libraryV1.Book;

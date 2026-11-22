@@ -3,7 +3,7 @@
 
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { MemoryStore, type CodeOutput } from "@the-protobuf-project/codemode";
+import { MemoryStore, type CodeOutput } from "@the-protobuf-project/runtime/codemode";
 import { setup } from "./helpers.ts";
 
 function completed(out: CodeOutput): unknown {

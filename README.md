@@ -45,13 +45,13 @@ need Node 22.18+ (it runs the TypeScript directly) and the repository:
 
 ```sh
 git clone https://github.com/the-protobuf-project/codemode.git
-cd codemode && npm install
+cd codemode && npm install   # installs runtime-ts too
 ```
 
 **Claude Code**
 
 ```sh
-claude mcp add library -- node --conditions=source "$PWD/examples/library/src/mcp.ts"
+claude mcp add library -- node "$PWD/examples/library/src/mcp.ts"
 ```
 
 **Claude Desktop**: add this to `claude_desktop_config.json` (Settings → Developer →
@@ -63,7 +63,7 @@ so give the full path of `node` (`which node`):
   "mcpServers": {
     "library": {
       "command": "/absolute/path/to/node",
-      "args": ["--conditions=source", "/absolute/path/to/codemode/examples/library/src/mcp.ts"],
+      "args": ["/absolute/path/to/codemode/examples/library/src/mcp.ts"],
       "env": { "CODEMODE_DB": "/absolute/path/to/library.db" }
     }
   }
@@ -74,7 +74,7 @@ so give the full path of `node` (`which node`):
 command. To look at the tools first:
 
 ```sh
-npx @modelcontextprotocol/inspector node --conditions=source examples/library/src/mcp.ts
+npx @modelcontextprotocol/inspector node examples/library/src/mcp.ts
 ```
 
 Then ask something that needs several calls, for example *"Which shelves have
@@ -124,11 +124,14 @@ export interface Book {
 export const BookCodec: MessageCodec<Book>;  // fromJson, toJson, encode, decode
 ```
 
-**3. Run.** Wire the generated connectors into the runtime and hand the model one tool:
+**3. Run.** Generated code builds on [runtime-ts](https://github.com/the-protobuf-project/runtime-ts)
+(`@the-protobuf-project/runtime`), the TypeScript runtime shared by every plugin. Wire the
+generated connectors into its Code Mode runtime and hand the model one tool:
 
 ```ts
-import { createCodemode, httpTransport } from "@the-protobuf-project/codemode";
-import { QuickJSExecutor } from "@the-protobuf-project/codemode/quickjs";
+import { createCodemode } from "@the-protobuf-project/runtime/codemode";
+import { QuickJSExecutor } from "@the-protobuf-project/runtime/codemode/quickjs";
+import { httpTransport } from "@the-protobuf-project/runtime/network";
 import { catalog, config, connectors, libraryV1 } from "./gen/index.ts";
 
 const client = new libraryV1.LibraryServiceClient(httpTransport({ baseUrl: "https://library.example.com" }));
@@ -167,11 +170,14 @@ generated reverts.
 ```
 protobuf/codemode/v1/      codemode.v1 annotations (protobuf/codemodepb: Go types)
 plugin/                    protoc-gen-codemode, on protokit
-packages/runtime/          @the-protobuf-project/codemode: codecs, transports, sandboxes, runtime
 examples/library/          annotated protos, generated code, an in-memory service, tests
 schema/                    JSON Schema for codemode.yaml
 docs/                      annotations, configuration, generated code, runtime, security
 ```
+
+The runtime the generated code imports lives in its own repository,
+[runtime-ts](https://github.com/the-protobuf-project/runtime-ts), next to
+[runtime-go](https://github.com/the-protobuf-project/runtime-go).
 
 ## Documentation
 

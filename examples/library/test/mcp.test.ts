@@ -6,7 +6,7 @@ import { test } from "node:test";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { ElicitRequestSchema } from "@modelcontextprotocol/sdk/types.js";
-import { createMcpServer } from "@the-protobuf-project/codemode/mcp";
+import { createMcpServer } from "@the-protobuf-project/runtime/codemode/mcp";
 import { setup } from "./helpers.ts";
 
 async function connect(options: { expose?: "code" | "search_execute"; approve?: boolean }) {

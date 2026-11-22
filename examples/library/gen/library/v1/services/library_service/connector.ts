@@ -9,10 +9,10 @@
 import {
   type Connector,
   type ConnectorOptions,
-  EmptyCodec,
   connector,
   unaryMethod,
-} from "@the-protobuf-project/codemode";
+} from "@the-protobuf-project/runtime/codemode";
+import { EmptyCodec } from "@the-protobuf-project/runtime/protobuf";
 import { ArchiveShelfRequestCodec } from "../../messages/archive_shelf_request.ts";
 import { ArchiveShelfResponseCodec } from "../../messages/archive_shelf_response.ts";
 import { BookCodec } from "../../messages/book.ts";

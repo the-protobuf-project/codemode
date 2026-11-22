@@ -13,8 +13,7 @@
     "allowImportingTsExtensions": true,
     "rewriteRelativeImportExtensions": true,
     "isolatedModules": true,
-    "skipLibCheck": true,
-    "customConditions": ["source"]
+    "skipLibCheck": true
   },
   "include": ["gen", "src", "test"]
 }

@@ -15,7 +15,7 @@ import {
   WireType,
   binary,
   protojson,
-} from "@the-protobuf-project/codemode";
+} from "@the-protobuf-project/runtime/protobuf";
 import type { ShelfName } from "../resources/shelf_name.ts";
 import { type Book, BookCodec } from "./book.ts";
 

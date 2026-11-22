@@ -21,7 +21,7 @@
     },
     "discovery": { "enum": ["progressive", "inline"], "default": "progressive", "description": "progressive: namespaces in the tool description, types through describe(). inline: every type in the description." },
     "import_extension": { "type": "string", "default": ".ts", "description": "Extension on relative imports: .ts for Node, Bun and Deno; .js for compiled output; empty for bundlers." },
-    "runtime_module": { "type": "string", "default": "@the-protobuf-project/codemode" },
+    "runtime_module": { "type": "string", "default": "@the-protobuf-project/runtime" },
     "executor": {
       "type": "object",
       "additionalProperties": false,

@@ -18,7 +18,7 @@ types, approval (`ArchiveShelf`, `MoveBook`), rollback (`CreateShelf`,
 ## Connect it to Claude
 
 ```sh
-claude mcp add library -- node --conditions=source "$PWD/src/mcp.ts"   # from this directory
+claude mcp add library -- node "$PWD/src/mcp.ts"   # from this directory
 ```
 
 See the [main README](../../README.md#try-it-with-claude) for Claude Desktop and
