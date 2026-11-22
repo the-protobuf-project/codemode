@@ -18,7 +18,7 @@ import (
 // annotations exclude it.
 func (cat *Catalog) addService(s *protogen.Service, f *protogen.File) error {
 	full := string(s.Desc.FullName())
-	opts, mcpOpts := serviceOptions(s.Desc)
+	opts, mcpOpts := cat.serviceOptions(s.Desc)
 	if !cat.Config.Selects(full) || opts.GetExclude() {
 		return nil
 	}
@@ -58,7 +58,7 @@ func (cat *Catalog) addService(s *protogen.Service, f *protogen.File) error {
 		}
 	}
 	for _, m := range svc.Methods {
-		mo, _, _ := methodOptions(m.Proto.Desc)
+		mo, _, _ := cat.methodOptions(m.Proto.Desc)
 		if err := cat.resolveRevert(svc, m, mo.GetRevert()); err != nil {
 			return fmt.Errorf("%s: %w", m.Proto.Desc.FullName(), err)
 		}
@@ -80,7 +80,7 @@ func (cat *Catalog) addService(s *protogen.Service, f *protogen.File) error {
 // method builds one sandbox method, applying codemode.v1 over mcp.v1 over
 // what the AIP method kind implies.
 func (cat *Catalog) method(svc *Service, m *protogen.Method) (*Method, error) {
-	opts, tool, elicit := methodOptions(m.Desc)
+	opts, tool, elicit := cat.methodOptions(m.Desc)
 	if opts.GetExclude() {
 		return nil, nil
 	}

@@ -22,7 +22,7 @@ type tsFile struct {
 	path    string
 	source  string
 	notes   []string
-	module  string // module JSDoc, written above the imports
+	module  string                     // module JSDoc, written above the imports
 	imports map[string]map[string]bool // specifier -> name -> type-only
 	body    strings.Builder
 }

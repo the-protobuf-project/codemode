@@ -26,6 +26,10 @@ type Config struct {
 	Executor   ExecutorConfig `yaml:"executor"`
 	Runtime    RuntimeConfig  `yaml:"runtime"`
 	MCP        MCPConfig      `yaml:"mcp"`
+	// Services and Methods set codemode.v1 options by full name, for protos
+	// that cannot be annotated. They win over annotations.
+	Services map[string]ServiceOverride `yaml:"services"`
+	Methods  map[string]MethodOverride  `yaml:"methods"`
 }
 
 // TSConfig holds the options of the TypeScript output. Other languages get
