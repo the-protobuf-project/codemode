@@ -1,7 +1,7 @@
 # Runtime
 
 The Code Mode runtime lives in [runtime-ts](https://github.com/the-protobuf-project/runtime-ts), the TypeScript runtime
-shared by every plugin, as the `@the-protobuf-project/codemode` package. It runs model code against generated connectors.
+shared by every plugin, as the `@the-protobuf-project/runtime-ts-codemode` package. It runs model code against generated connectors.
 It keeps no state in memory between calls: executions, their call logs and
 snippets live in a `Store`, so a runtime can be recreated, or moved, at any time.
 

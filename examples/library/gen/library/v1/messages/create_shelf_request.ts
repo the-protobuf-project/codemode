@@ -15,7 +15,7 @@ import {
   WireType,
   binary,
   protojson,
-} from "@the-protobuf-project/protobuf";
+} from "@the-protobuf-project/runtime-ts-protobuf";
 import { type Shelf, ShelfCodec } from "./shelf.ts";
 
 /** Request for CreateShelf. */

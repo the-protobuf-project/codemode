@@ -1,8 +1,8 @@
 // Copyright 2026 The Protobuf Project authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { StatusError } from "@the-protobuf-project/errors";
-import type { Empty } from "@the-protobuf-project/protobuf";
+import { StatusError } from "@the-protobuf-project/runtime-ts-errors";
+import type { Empty } from "@the-protobuf-project/runtime-ts-protobuf";
 import { libraryV1 } from "../gen/index.ts";
 
 type Book = libraryV1.Book;

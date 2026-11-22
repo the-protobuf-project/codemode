@@ -18,7 +18,7 @@ types, approval (`ArchiveShelf`, `MoveBook`), rollback (`CreateShelf`,
 ## Connect it to Claude
 
 ```sh
-claude mcp add library -- node "$PWD/src/mcp.ts"   # from this directory
+claude mcp add library -- bun "$PWD/src/mcp.ts"   # from this directory
 ```
 
 See the [main README](../../README.md#try-it-with-claude) for Claude Desktop and
@@ -27,7 +27,7 @@ other MCP clients.
 ## Run it
 
 ```sh
-npm run demo            # from this directory
-npm test                # Node; test:bun and test:deno for the other runtimes
+bun run demo            # from this directory
+bun run test            # Bun; test:node and test:deno for the other runtimes
 just generate           # from the repository root, after changing a proto
 ```

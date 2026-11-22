@@ -8,12 +8,8 @@ on:
 
 permissions:
   contents: read
-
-# The example uses the runtime-ts packages from a checkout beside this one
-# (file:../../../runtime/runtime-ts/<package>) until they are on npm. Bump
-# the ref when the generated code needs a newer runtime.
-env:
-  RUNTIME_TS_REF: e9c7b5a8f4189f987d5b76260dfc5cd759cd0b47
+  # The runtime-ts packages come from GitHub Packages, which needs a token.
+  packages: read
 
 jobs:
   go:
@@ -43,50 +39,34 @@ jobs:
           git diff --exit-code -- examples/library/gen
 
   typescript:
-    name: Runtime (${{ matrix.runtime }})
+    name: Example (${{ matrix.runtime }})
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
-        runtime: [node, bun, deno]
-    defaults:
-      run:
-        working-directory: codemode
+        runtime: [bun, node, deno]
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v6
-        with:
-          path: codemode
-      - uses: actions/checkout@v6
-        with:
-          repository: the-protobuf-project/runtime-ts
-          ref: ${{ env.RUNTIME_TS_REF }}
-          path: runtime/runtime-ts
-          # runtime-ts is private for now; a token that can read it is needed
-          # until it is public.
-          token: ${{ secrets.RUNTIME_TS_TOKEN || github.token }}
+      - uses: oven-sh/setup-bun@v2
       - uses: actions/setup-node@v5
+        if: matrix.runtime == 'node'
         with:
           node-version: 24
-      - uses: oven-sh/setup-bun@v2
-        if: matrix.runtime == 'bun'
       - uses: denoland/setup-deno@v2
+        if: matrix.runtime == 'deno'
         with:
           deno-version: v2.x
-      - name: Build runtime-ts
-        working-directory: runtime/runtime-ts
+      - run: bun install
+      - name: Type-check and test on Bun
+        if: matrix.runtime == 'bun'
         run: |
-          npm ci
-          npm run build
-      - run: npm ci
-      - name: Type-check
-        if: matrix.runtime == 'node'
-        run: npm run typecheck
+          bun run typecheck
+          bun run test
       - name: Test on Node
         if: matrix.runtime == 'node'
-        run: npm test
-      - name: Test on Bun
-        if: matrix.runtime == 'bun'
-        run: npm run test:bun --workspaces --if-present
+        run: bun run test:node
       - name: Test on Deno
         if: matrix.runtime == 'deno'
-        run: npm run test:deno --workspaces --if-present
+        run: bun run test:deno

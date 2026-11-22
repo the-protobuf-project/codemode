@@ -14,7 +14,7 @@ import {
   type ToJsonOptions,
   WireType,
   protojson,
-} from "@the-protobuf-project/protobuf";
+} from "@the-protobuf-project/runtime-ts-protobuf";
 
 /** Request for ListShelves. */
 export interface ListShelvesRequest {

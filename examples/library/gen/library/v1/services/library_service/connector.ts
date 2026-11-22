@@ -11,8 +11,8 @@ import {
   type ConnectorOptions,
   connector,
   unaryMethod,
-} from "@the-protobuf-project/codemode";
-import { EmptyCodec } from "@the-protobuf-project/protobuf";
+} from "@the-protobuf-project/runtime-ts-codemode";
+import { EmptyCodec } from "@the-protobuf-project/runtime-ts-protobuf";
 import { ArchiveShelfRequestCodec } from "../../messages/archive_shelf_request.ts";
 import { ArchiveShelfResponseCodec } from "../../messages/archive_shelf_response.ts";
 import { BookCodec } from "../../messages/book.ts";

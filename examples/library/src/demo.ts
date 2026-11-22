@@ -2,10 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 // Walks through Code Mode against the in-memory library: a read, an approval
-// pause, resume, and rollback. Run with `npm run demo`.
+// pause, resume, and rollback. Run with `bun run demo`.
 
-import { createCodemode, type CodeOutput } from "@the-protobuf-project/codemode";
-import { QuickJSExecutor } from "@the-protobuf-project/codemode/quickjs";
+import { createCodemode, type CodeOutput } from "@the-protobuf-project/runtime-ts-codemode";
+import { QuickJSExecutor } from "@the-protobuf-project/runtime-ts-codemode/quickjs";
 import { catalog, config, connectors } from "../gen/index.ts";
 import { InMemoryLibrary } from "./library.ts";
 

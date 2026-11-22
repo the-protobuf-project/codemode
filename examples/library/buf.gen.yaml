@@ -11,4 +11,4 @@ plugins:
     strategy: all
     opt:
       - config=examples/library/codemode.yaml
-      - runtime_scope=@the-protobuf-project
+      - runtime_prefix=@the-protobuf-project/runtime-ts-

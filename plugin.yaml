@@ -15,7 +15,7 @@ annotations:
 strategy: all
 
 # Parameters: config=<codemode.yaml>, import_extension=.ts|.js|none,
-# runtime_scope=<npm scope of the runtime-ts packages>.
+# runtime_prefix=<prefix of the runtime-ts package names>.
 outputs:
   - "**/messages/*.ts"
   - "**/enums/*.ts"
