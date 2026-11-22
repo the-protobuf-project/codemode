@@ -24,10 +24,7 @@
       "description": "Service full-name globs to hide."
     },
     "naming": {
-      "enum": [
-        "lowerCamel",
-        "snake"
-      ],
+      "enum": ["lowerCamel", "snake"],
       "default": "lowerCamel",
       "description": "Sandbox method names: library.createBook or library.create_book."
     },
@@ -36,18 +33,12 @@
       "additionalProperties": false,
       "properties": {
         "destructive": {
-          "enum": [
-            "require",
-            "allow"
-          ],
+          "enum": ["require", "allow"],
           "default": "require",
           "description": "Whether destructive methods pause for approval."
         },
         "elicitation": {
-          "enum": [
-            "require",
-            "allow"
-          ],
+          "enum": ["require", "allow"],
           "default": "require",
           "description": "Whether methods with mcp.v1.elicitation pause for approval."
         },
@@ -59,10 +50,7 @@
       }
     },
     "discovery": {
-      "enum": [
-        "progressive",
-        "inline"
-      ],
+      "enum": ["progressive", "inline"],
       "default": "progressive",
       "description": "progressive: namespaces in the tool description, types through describe(). inline: every type in the description."
     },
@@ -81,10 +69,7 @@
           "default": 64
         },
         "outbound": {
-          "enum": [
-            "none",
-            "allowlist"
-          ],
+          "enum": ["none", "allowlist"],
           "default": "none"
         },
         "allow": {
@@ -126,10 +111,7 @@
       "additionalProperties": false,
       "properties": {
         "expose": {
-          "enum": [
-            "code",
-            "search_execute"
-          ],
+          "enum": ["code", "search_execute"],
           "default": "code"
         }
       }
