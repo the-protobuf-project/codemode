@@ -96,7 +96,7 @@ func (cat *Catalog) method(svc *Service, m *protogen.Method) (*Method, error) {
 	name := methodName(rpc, cat.Config.Naming)
 	meth := &Method{
 		Proto: m, Service: svc, Name: name, Path: svc.Namespace + "." + name,
-		Doc:   firstNonEmpty(tool.GetDescription(), comment(m.Comments)),
+		Doc:   joinDocs(comment(m.Comments), tool.GetDescription()),
 		Input: in, Output: out, HTTP: cat.aip.httpRule(m.Desc), Examples: opts.GetExamples(),
 		ApprovalMsg: elicit.GetMessage(),
 	}

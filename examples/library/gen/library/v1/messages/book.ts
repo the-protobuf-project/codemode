@@ -25,6 +25,8 @@ import { type BookEdition, BookEditionCodec } from "./book_edition.ts";
 /**
  * A book on a shelf.
  *
+ * A book is lent to at most one borrower at a time.
+ *
  * Resource `library.example.com/Book`, named `shelves/{shelf}/books/{book}`.
  */
 export interface Book {
@@ -46,7 +48,7 @@ export interface Book {
   authors?: string[];
 
   /**
-   * Where the book is in its lending lifecycle.
+   * Where the book is in its lending lifecycle; see BookState.
    *
    * Output only; ignored in requests.
    */
@@ -55,14 +57,14 @@ export interface Book {
   /**
    * ISBN-13 without dashes.
    *
-   * Oneof `identifier`: set at most one of isbn, doi.
+   * Oneof `identifier`: A standard identifier for the book. Set at most one of isbn, doi.
    */
   isbn?: string;
 
   /**
    * Digital Object Identifier.
    *
-   * Oneof `identifier`: set at most one of isbn, doi.
+   * Oneof `identifier`: A standard identifier for the book. Set at most one of isbn, doi.
    */
   doi?: string;
 
@@ -111,6 +113,13 @@ export interface Book {
    * Output only; ignored in requests.
    */
   createTime?: string;
+
+  /**
+   * Shelf mark from the old catalog. Use labels["call_number"] instead.
+   *
+   * @deprecated
+   */
+  callNumber?: string;
 }
 
 /** Converts {@link Book} between its interface, protojson and the protobuf binary format. */
@@ -134,6 +143,7 @@ export const BookCodec: MessageCodec<Book> = {
       dueTime: protojson.message(TimestampCodec)(protojson.get(o, "dueTime", "due_time"), path + ".dueTime"),
       readingTime: protojson.message(DurationCodec)(protojson.get(o, "readingTime", "reading_time"), path + ".readingTime"),
       createTime: protojson.message(TimestampCodec)(protojson.get(o, "createTime", "create_time"), path + ".createTime"),
+      callNumber: protojson.string(protojson.get(o, "callNumber", "call_number"), path + ".callNumber") ?? "",
     };
     protojson.oneof(m, path, "identifier", ["isbn", "doi"]);
     return m;
@@ -156,6 +166,7 @@ export const BookCodec: MessageCodec<Book> = {
     if (m.dueTime != null) o["dueTime"] = TimestampCodec.toJson(m.dueTime, options);
     if (m.readingTime != null) o["readingTime"] = DurationCodec.toJson(m.readingTime, options);
     if (m.createTime != null) o["createTime"] = TimestampCodec.toJson(m.createTime, options);
+    if (all || m.callNumber) o["callNumber"] = m.callNumber ?? "";
     return o;
   },
 
@@ -179,6 +190,7 @@ export const BookCodec: MessageCodec<Book> = {
     if (m.dueTime != null) binary.message(w, 12, TimestampCodec, m.dueTime);
     if (m.readingTime != null) binary.message(w, 13, DurationCodec, m.readingTime);
     if (m.createTime != null) binary.message(w, 14, TimestampCodec, m.createTime);
+    if (m.callNumber) w.tag(15, WireType.LengthDelimited).string(m.callNumber);
     return w;
   },
 
@@ -194,6 +206,7 @@ export const BookCodec: MessageCodec<Book> = {
       editions: [],
       labels: {},
       borrower: "",
+      callNumber: "",
     };
     while (r.pos < end) {
       const [no, wt] = r.tag();
@@ -244,6 +257,9 @@ export const BookCodec: MessageCodec<Book> = {
           break;
         case 14:
           m.createTime = binary.readMessage(r, TimestampCodec);
+          break;
+        case 15:
+          m.callNumber = r.string();
           break;
         default:
           r.skip(wt, no);

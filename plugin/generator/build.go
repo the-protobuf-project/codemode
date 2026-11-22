@@ -5,7 +5,6 @@ package generator
 
 import (
 	"fmt"
-	"strings"
 
 	"google.golang.org/protobuf/compiler/protogen"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -59,6 +58,9 @@ func Build(gen *protogen.Plugin, cfg *Config) (*Catalog, error) {
 			}
 		}
 	}
+	for _, p := range cat.Packages {
+		p.Doc = packageDoc(gen.Files, p.Name)
+	}
 	cat.assignSandboxNames()
 	return cat, nil
 }
@@ -76,9 +78,10 @@ func (cat *Catalog) addEnum(e *protogen.Enum) {
 	}
 	for _, v := range e.Values {
 		en.Values = append(en.Values, EnumValue{
-			Name:   string(v.Desc.Name()),
-			Number: int32(v.Desc.Number()),
-			Doc:    enumValueDoc(v.Desc, comment(v.Comments)),
+			Name:       string(v.Desc.Name()),
+			Number:     int32(v.Desc.Number()),
+			Doc:        enumValueDoc(v.Desc, comment(v.Comments)),
+			Deprecated: isDeprecated(v.Desc),
 		})
 	}
 	p.Enums = append(p.Enums, en)
@@ -109,11 +112,6 @@ func (cat *Catalog) typeRef(m *protogen.Message) (TypeRef, error) {
 		return TypeRef{Message: msg}, nil
 	}
 	return TypeRef{}, fmt.Errorf("message %s is not collected", m.Desc.FullName())
-}
-
-// comment is a protogen comment as plain text, without comment markers.
-func comment(c protogen.CommentSet) string {
-	return strings.TrimSpace(string(c.Leading))
 }
 
 func protocVersion(gen *protogen.Plugin) string {

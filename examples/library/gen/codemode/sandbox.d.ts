@@ -63,6 +63,8 @@ interface ArchiveShelfResponse {
 /**
  * A book on a shelf.
  *
+ * A book is lent to at most one borrower at a time.
+ *
  * Resource `library.example.com/Book`, named `shelves/{shelf}/books/{book}`.
  */
 interface Book {
@@ -84,7 +86,7 @@ interface Book {
   authors?: string[];
 
   /**
-   * Where the book is in its lending lifecycle.
+   * Where the book is in its lending lifecycle; see BookState.
    *
    * Output only; ignored in requests.
    */
@@ -93,14 +95,14 @@ interface Book {
   /**
    * ISBN-13 without dashes.
    *
-   * Oneof `identifier`: set at most one of isbn, doi.
+   * Oneof `identifier`: A standard identifier for the book. Set at most one of isbn, doi.
    */
   isbn?: string;
 
   /**
    * Digital Object Identifier.
    *
-   * Oneof `identifier`: set at most one of isbn, doi.
+   * Oneof `identifier`: A standard identifier for the book. Set at most one of isbn, doi.
    */
   doi?: string;
 
@@ -149,11 +151,22 @@ interface Book {
    * Output only; ignored in requests.
    */
   createTime?: string;
+
+  /**
+   * Shelf mark from the old catalog. Use labels["call_number"] instead.
+   *
+   * @deprecated
+   */
+  callNumber?: string;
 }
 
 /** A printing of the book. */
 interface BookEdition {
-  /** Edition number, starting at 1. */
+  /**
+   * Edition number, starting at 1.
+   *
+   * Reprints keep their edition's number.
+   */
   number?: number;
 
   /** Year of publication. */
@@ -428,7 +441,11 @@ interface UpdateBookRequest {
   updateMask?: string;
 }
 
-/** Shelves hold books. Names look like shelves/{shelf}/books/{book}. Lending a book sets its borrower and due time. */
+/**
+ * Manages the shelves and books of a library, and lends books out.
+ *
+ * Shelves hold books. Names look like shelves/{shelf}/books/{book}. Lending a book sets its borrower and due time.
+ */
 declare const library: {
   /** Lists shelves, ordered by name. */
   listShelves(input: ListShelvesRequest): Promise<ListShelvesResponse>;
@@ -449,7 +466,11 @@ declare const library: {
   /** Lists the books on a shelf. */
   listBooks(input: ListBooksRequest): Promise<ListBooksResponse>;
 
-  /** Gets a book. */
+  /**
+   * Gets a book.
+   *
+   * The result includes the borrower and due time of a lent book.
+   */
   getBook(input: GetBookRequest): Promise<Book>;
 
   /**

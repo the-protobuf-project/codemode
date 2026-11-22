@@ -134,7 +134,11 @@ func fieldNotes(f *Field) []string {
 		for i, o := range f.Oneof.Fields {
 			names[i] = o.JSONName
 		}
-		notes = append(notes, "Oneof `"+f.Oneof.Name+"`: set at most one of "+strings.Join(names, ", ")+".")
+		doc := f.Oneof.Doc
+		if doc != "" {
+			doc += " "
+		}
+		notes = append(notes, "Oneof `"+f.Oneof.Name+"`: "+doc+"Set at most one of "+strings.Join(names, ", ")+".")
 	}
-	return notes
+	return append(notes, deprecated(isDeprecated(f.Desc))...)
 }

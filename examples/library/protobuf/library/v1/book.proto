@@ -11,6 +11,8 @@ import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
 
 // A book on a shelf.
+//
+// A book is lent to at most one borrower at a time.
 message Book {
   option (google.api.resource) = {
     type: "library.example.com/Book"
@@ -22,7 +24,7 @@ message Book {
   // A printing of the book.
   message Edition {
     // Edition number, starting at 1.
-    int32 number = 1;
+    int32 number = 1; // Reprints keep their edition's number.
     // Year of publication.
     int32 year = 2;
     // Publisher name.
@@ -38,7 +40,7 @@ message Book {
   // Authors, in credit order.
   repeated string authors = 3;
 
-  // Where the book is in its lending lifecycle.
+  // Where the book is in its lending lifecycle; see [BookState][library.v1.BookState].
   BookState state = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
 
   // A standard identifier for the book.
@@ -72,6 +74,9 @@ message Book {
 
   // When the book was added.
   google.protobuf.Timestamp create_time = 14 [(google.api.field_behavior) = OUTPUT_ONLY];
+
+  // Shelf mark from the old catalog. Use labels["call_number"] instead.
+  string call_number = 15 [deprecated = true];
 }
 
 // Where a book is in its lending lifecycle.

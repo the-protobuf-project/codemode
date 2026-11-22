@@ -23,10 +23,10 @@ type enumValueView struct {
 }
 
 func newEnumDecl(e *Enum, name, export string) enumDeclView {
-	v := enumDeclView{Doc: jsdoc("", e.Doc), Export: export, Name: name}
+	v := enumDeclView{Doc: jsdoc("", e.Doc, deprecated(isDeprecated(e.Desc))...), Export: export, Name: name}
 	for i, val := range e.Values {
 		v.Values = append(v.Values, enumValueView{
-			Doc: jsdoc("  ", val.Doc), Name: val.Name, Number: val.Number, Last: i == len(e.Values)-1,
+			Doc: jsdoc("  ", val.Doc, deprecated(val.Deprecated)...), Name: val.Name, Number: val.Number, Last: i == len(e.Values)-1,
 		})
 	}
 	return v

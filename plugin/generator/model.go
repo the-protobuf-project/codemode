@@ -26,6 +26,7 @@ type Catalog struct {
 type Package struct {
 	Name      protoreflect.FullName // "library.v1"
 	Dir       string                // "library/v1"
+	Doc       string                // comments above `package`
 	Messages  []*Message
 	Enums     []*Enum
 	Resources []*Resource
@@ -70,6 +71,7 @@ type Field struct {
 // Oneof is a set of fields of which at most one is set.
 type Oneof struct {
 	Name   string
+	Doc    string
 	Fields []*Field
 }
 
@@ -90,9 +92,10 @@ func (e *Enum) Codec() string { return e.Name + "Codec" }
 
 // EnumValue is one enum value.
 type EnumValue struct {
-	Name   string
-	Number int32
-	Doc    string
+	Name       string
+	Number     int32
+	Doc        string
+	Deprecated bool
 }
 
 // Resource is a google.api.resource pattern, generated as a typed name.

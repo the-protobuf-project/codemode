@@ -18,7 +18,11 @@ import {
 
 /** A printing of the book. */
 export interface BookEdition {
-  /** Edition number, starting at 1. */
+  /**
+   * Edition number, starting at 1.
+   *
+   * Reprints keep their edition's number.
+   */
   number?: number;
 
   /** Year of publication. */

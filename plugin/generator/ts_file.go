@@ -22,6 +22,7 @@ type tsFile struct {
 	path    string
 	source  string
 	notes   []string
+	module  string // module JSDoc, written above the imports
 	imports map[string]map[string]bool // specifier -> name -> type-only
 	body    strings.Builder
 }
@@ -106,6 +107,7 @@ func (f *tsFile) content() string {
 		Notes:         f.notes,
 	}))
 	b.WriteString("\n\n")
+	b.WriteString(f.module)
 	specs := make([]string, 0, len(f.imports))
 	for s := range f.imports {
 		specs = append(specs, s)

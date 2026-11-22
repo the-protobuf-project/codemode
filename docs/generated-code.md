@@ -110,6 +110,22 @@ type reads the same in both. To change the output, edit a template, run
 `just generate`, and commit the regenerated example: the golden test fails until
 they match.
 
+## Documentation
+
+Every comment in the protos is carried into JSDoc, in the module files and in
+`sandbox.d.ts`, so editors and the model read the same text:
+
+- leading and trailing comments on messages, fields, oneofs, enums, enum
+  values, services and RPCs, dedented, paragraphs kept;
+- the comment above `package`, as the package `index.ts` module doc
+  (`@packageDocumentation`);
+- `mcp.v1` descriptions and codemode `instructions`, added after the comment
+  rather than replacing it;
+- `deprecated = true`, as `@deprecated`;
+- AIP-192 references such as `[Book][library.v1.Book]`, as their text;
+- notes derived from annotations: required, output only, resource names,
+  oneof members, 64-bit integers, bytes and well-known type formats.
+
 ## Parsing
 
 `protogen` reads the request; protokit's service IR

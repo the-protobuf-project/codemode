@@ -80,7 +80,11 @@ export interface LibraryService {
   /** Lists the books on a shelf. */
   listBooks(request: ListBooksRequest, options?: CallOptions): Promise<ListBooksResponse>;
 
-  /** Gets a book. */
+  /**
+   * Gets a book.
+   *
+   * The result includes the borrower and due time of a lent book.
+   */
   getBook(request: GetBookRequest, options?: CallOptions): Promise<Book>;
 
   /** Adds a book to a shelf. */
