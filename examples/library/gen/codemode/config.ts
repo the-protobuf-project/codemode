@@ -7,7 +7,7 @@
 //
 // codemode — https://github.com/the-protobuf-project/codemode
 
-import type { CodemodeConfig } from "@the-protobuf-project/runtime/codemode";
+import type { CodemodeConfig } from "@the-protobuf-project/codemode";
 
 export const config: CodemodeConfig = {
   discovery: "progressive",

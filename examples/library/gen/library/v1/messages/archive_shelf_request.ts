@@ -14,7 +14,7 @@ import {
   type ToJsonOptions,
   WireType,
   protojson,
-} from "@the-protobuf-project/runtime/protobuf";
+} from "@the-protobuf-project/protobuf";
 import type { ShelfName } from "../resources/shelf_name.ts";
 
 /** Request for ArchiveShelf. */

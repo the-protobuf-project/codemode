@@ -12,7 +12,10 @@
     "test:deno": "deno test --no-check --allow-read --allow-env --allow-run test/"
   },
   "dependencies": {
-    "@the-protobuf-project/runtime": "github:the-protobuf-project/runtime-ts#0b1fa1053b6bbd13eb597433cac7ab9c5872b080",
+    "@the-protobuf-project/codemode": "file:../../../runtime/runtime-ts/codemode",
+    "@the-protobuf-project/errors": "file:../../../runtime/runtime-ts/errors",
+    "@the-protobuf-project/network": "file:../../../runtime/runtime-ts/network",
+    "@the-protobuf-project/protobuf": "file:../../../runtime/runtime-ts/protobuf",
     "@modelcontextprotocol/sdk": "^1.32.2",
     "quickjs-emscripten": "^0.32.0"
   },

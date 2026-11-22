@@ -9,6 +9,12 @@ on:
 permissions:
   contents: read
 
+# The example uses the runtime-ts packages from a checkout beside this one
+# (file:../../../runtime/runtime-ts/<package>) until they are on npm. Bump
+# the ref when the generated code needs a newer runtime.
+env:
+  RUNTIME_TS_REF: e9c7b5a8f4189f987d5b76260dfc5cd759cd0b47
+
 jobs:
   go:
     name: Plugin (Go)
@@ -43,17 +49,34 @@ jobs:
       fail-fast: false
       matrix:
         runtime: [node, bun, deno]
+    defaults:
+      run:
+        working-directory: codemode
     steps:
       - uses: actions/checkout@v6
+        with:
+          path: codemode
+      - uses: actions/checkout@v6
+        with:
+          repository: the-protobuf-project/runtime-ts
+          ref: ${{ env.RUNTIME_TS_REF }}
+          path: runtime/runtime-ts
+          # runtime-ts is private for now; a token that can read it is needed
+          # until it is public.
+          token: ${{ secrets.RUNTIME_TS_TOKEN || github.token }}
       - uses: actions/setup-node@v5
         with:
           node-version: 24
-          cache: npm
       - uses: oven-sh/setup-bun@v2
         if: matrix.runtime == 'bun'
       - uses: denoland/setup-deno@v2
         with:
           deno-version: v2.x
+      - name: Build runtime-ts
+        working-directory: runtime/runtime-ts
+        run: |
+          npm ci
+          npm run build
       - run: npm ci
       - name: Type-check
         if: matrix.runtime == 'node'

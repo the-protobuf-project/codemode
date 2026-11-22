@@ -7,9 +7,9 @@
 
 import { DatabaseSync } from "node:sqlite";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { createCodemode, SqliteStore, type SqliteDatabase } from "@the-protobuf-project/runtime/codemode";
-import { createMcpServer } from "@the-protobuf-project/runtime/codemode/mcp";
-import { QuickJSExecutor } from "@the-protobuf-project/runtime/codemode/quickjs";
+import { createCodemode, SqliteStore, type SqliteDatabase } from "@the-protobuf-project/codemode";
+import { createMcpServer } from "@the-protobuf-project/codemode/mcp";
+import { QuickJSExecutor } from "@the-protobuf-project/codemode/quickjs";
 import { catalog, config, connectors } from "../gen/index.ts";
 import { InMemoryLibrary } from "./library.ts";
 

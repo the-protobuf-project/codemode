@@ -52,20 +52,21 @@ func (f *tsFile) add(spec, name string, typeOnly bool) {
 }
 
 // runtimeModules maps runtime exports that do not live in the protobuf
-// module to the module that has them. Everything else is in /protobuf.
+// package to the runtime-ts package that has them. Everything else is in
+// <scope>/protobuf.
 var runtimeModules = map[string]string{
 	"CallOptions": "network", "MethodDescriptor": "network", "Transport": "network",
 	"connector": "codemode", "unaryMethod": "codemode", "Connector": "codemode",
 	"ConnectorOptions": "codemode", "Catalog": "codemode", "CodemodeConfig": "codemode",
 }
 
-// runtimeSpec is the import specifier of the runtime module exporting name.
+// runtimeSpec is the import specifier of the runtime package exporting name.
 func (f *tsFile) runtimeSpec(name string) string {
 	mod, ok := runtimeModules[name]
 	if !ok {
 		mod = "protobuf"
 	}
-	return f.cat.Config.RuntimeModule + "/" + mod
+	return f.cat.Config.RuntimeScope + "/" + mod
 }
 
 // runtime imports values from the runtime package.

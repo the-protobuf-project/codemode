@@ -36,12 +36,12 @@ func main() {
 	var flags flag.FlagSet
 	config := flags.String("config", "", "Path to codemode.yaml, relative to where buf runs.")
 	ext := flags.String("import_extension", ".ts", `Extension on relative imports: ".ts", ".js" or "none".`)
-	runtimeModule := flags.String("runtime_module", "", "Module the generated code imports the runtime from.")
+	runtimeScope := flags.String("runtime_scope", "", `npm scope of the runtime packages; code imports <scope>/protobuf, /network and /codemode.`)
 
 	generator.PluginVersion = resolveVersion()
 
 	generator.Run(protogen.Options{ParamFunc: flags.Set}, func(gen *protogen.Plugin) error {
-		opts := generator.Options{Config: *config, RuntimeModule: *runtimeModule}
+		opts := generator.Options{Config: *config, RuntimeScope: *runtimeScope}
 		set := false
 		flags.Visit(func(f *flag.Flag) { set = set || f.Name == "import_extension" })
 		if set {

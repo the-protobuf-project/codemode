@@ -3,7 +3,7 @@
 
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { fromBinary, toBinary } from "@the-protobuf-project/runtime/protobuf";
+import { fromBinary, toBinary } from "@the-protobuf-project/protobuf";
 import { libraryV1 } from "../gen/index.ts";
 
 const { BookCodec, CreateBookRequestCodec, ListBooksRequestCodec, BookName, ShelfName, GenreCodec } = libraryV1;

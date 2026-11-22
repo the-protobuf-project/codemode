@@ -6,8 +6,8 @@
 //
 // codemode — https://github.com/the-protobuf-project/codemode
 
-import type { CallOptions, MethodDescriptor } from "@the-protobuf-project/runtime/network";
-import { type Empty, EmptyCodec } from "@the-protobuf-project/runtime/protobuf";
+import type { CallOptions, MethodDescriptor } from "@the-protobuf-project/network";
+import { type Empty, EmptyCodec } from "@the-protobuf-project/protobuf";
 import {
   type ArchiveShelfRequest,
   ArchiveShelfRequestCodec,

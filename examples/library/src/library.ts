@@ -1,8 +1,8 @@
 // Copyright 2026 The Protobuf Project authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { CodemodeError } from "@the-protobuf-project/runtime/errors";
-import type { Empty } from "@the-protobuf-project/runtime/protobuf";
+import { StatusError } from "@the-protobuf-project/errors";
+import type { Empty } from "@the-protobuf-project/protobuf";
 import { libraryV1 } from "../gen/index.ts";
 
 type Book = libraryV1.Book;
@@ -165,7 +165,7 @@ export class InMemoryLibrary implements libraryV1.LibraryService {
 }
 
 function fail(code: "NOT_FOUND" | "ALREADY_EXISTS" | "FAILED_PRECONDITION", message: string): never {
-  throw new CodemodeError(code, message);
+  throw new StatusError(code, message);
 }
 
 function page<T, R>(all: T[], size: number | undefined, token: string | undefined, wrap: (items: T[], next: string) => R): R {

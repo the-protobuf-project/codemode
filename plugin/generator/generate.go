@@ -20,7 +20,7 @@ import (
 type Options struct {
 	Config          string // path to codemode.yaml
 	ImportExtension *string
-	RuntimeModule   string
+	RuntimeScope    string // npm scope of the runtime packages
 }
 
 // ProtoSource builds the catalog from the CodeGeneratorRequest.
@@ -41,8 +41,8 @@ func (s ProtoSource) Build(ctx factory.Ctx) (*Catalog, error) {
 	if s.Options.ImportExtension != nil {
 		cfg.ImportExtension = s.Options.ImportExtension
 	}
-	if s.Options.RuntimeModule != "" {
-		cfg.RuntimeModule = s.Options.RuntimeModule
+	if s.Options.RuntimeScope != "" {
+		cfg.RuntimeScope = s.Options.RuntimeScope
 	}
 	return Build(ctx.Plugin, cfg)
 }

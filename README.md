@@ -44,8 +44,12 @@ The library example runs as an MCP server on stdio, with one `code` tool. You
 need Node 22.18+ (it runs the TypeScript directly) and the repository:
 
 ```sh
+# runtime-ts must sit beside codemode until its packages are on npm
+mkdir -p the-protobuf-project/runtime && cd the-protobuf-project
+git clone https://github.com/the-protobuf-project/runtime-ts.git runtime/runtime-ts
 git clone https://github.com/the-protobuf-project/codemode.git
-cd codemode && npm install   # installs runtime-ts too
+(cd runtime/runtime-ts && npm install && npm run build)
+cd codemode && npm install
 ```
 
 **Claude Code**
@@ -125,13 +129,14 @@ export const BookCodec: MessageCodec<Book>;  // fromJson, toJson, encode, decode
 ```
 
 **3. Run.** Generated code builds on [runtime-ts](https://github.com/the-protobuf-project/runtime-ts)
-(`@the-protobuf-project/runtime`), the TypeScript runtime shared by every plugin. Wire the
+(the `@the-protobuf-project/protobuf`, `/network` and `/codemode` packages), the TypeScript runtime
+shared by every plugin. Wire the
 generated connectors into its Code Mode runtime and hand the model one tool:
 
 ```ts
-import { createCodemode } from "@the-protobuf-project/runtime/codemode";
-import { QuickJSExecutor } from "@the-protobuf-project/runtime/codemode/quickjs";
-import { httpTransport } from "@the-protobuf-project/runtime/network";
+import { createCodemode } from "@the-protobuf-project/codemode";
+import { QuickJSExecutor } from "@the-protobuf-project/codemode/quickjs";
+import { httpTransport } from "@the-protobuf-project/network";
 import { catalog, config, connectors, libraryV1 } from "./gen/index.ts";
 
 const client = new libraryV1.LibraryServiceClient(httpTransport({ baseUrl: "https://library.example.com" }));
@@ -193,7 +198,7 @@ Requires Go 1.26+, [buf](https://buf.build), Node 22.18+ and [just](https://just
 Bun and Deno to run those suites.
 
 ```sh
-npm install
+npm install          # with runtime-ts built at ../runtime/runtime-ts, as above
 just generate        # build the plugin and regenerate examples/library/gen
 just test            # Go tests (including a golden test of the example), type-check, Node tests
 just test-runtimes   # the same TypeScript tests on Bun and Deno

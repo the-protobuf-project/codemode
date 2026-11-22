@@ -6,7 +6,7 @@
 //
 // codemode — https://github.com/the-protobuf-project/codemode
 
-import { type EnumCodec, enumCodec } from "@the-protobuf-project/runtime/protobuf";
+import { type EnumCodec, enumCodec } from "@the-protobuf-project/protobuf";
 
 /** The kind of books on a shelf. */
 export type Genre =
