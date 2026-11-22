@@ -3,7 +3,7 @@
 
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { MemoryStore, type CodeOutput } from "@the-protobuf-project/codemode";
+import { type CodeOutput, MemoryStore } from "@the-protobuf-project/codemode";
 import { setup } from "./helpers.ts";
 
 function completed(out: CodeOutput): unknown {
@@ -24,24 +24,33 @@ test("code chains typed calls and returns only what it needs", async () => {
       return counts;
     }`,
   });
-  assert.deepEqual(completed(out), [["Poetry", 3], ["Fiction", 0]]);
+  assert.deepEqual(completed(out), [
+    ["Poetry", 3],
+    ["Fiction", 0],
+  ]);
 });
 
 test("TypeScript and bare bodies run too", async () => {
   const { runtime } = setup();
-  const out = await runtime.execute({ code: `const b: Book = await library.getBook({ name: "shelves/poetry/books/odes" });\nreturn b.title;` });
+  const out = await runtime.execute({
+    code: `const b: Book = await library.getBook({ name: "shelves/poetry/books/odes" });\nreturn b.title;`,
+  });
   assert.equal(completed(out), "Odes");
 });
 
 test("service errors reach the code with their gRPC code", async () => {
   const { runtime } = setup();
-  const out = await runtime.execute({ code: `try { await library.getBook({ name: "shelves/poetry/books/nope" }); } catch (e) { return e.code; }` });
+  const out = await runtime.execute({
+    code: `try { await library.getBook({ name: "shelves/poetry/books/nope" }); } catch (e) { return e.code; }`,
+  });
   assert.equal(completed(out), "NOT_FOUND");
 });
 
 test("invalid arguments fail before the service is called", async () => {
   const { runtime } = setup();
-  const out = await runtime.execute({ code: `try { await library.lendBook({ name: "shelves/poetry/books/odes", days: "many" }); } catch (e) { return e.message; }` });
+  const out = await runtime.execute({
+    code: `try { await library.lendBook({ name: "shelves/poetry/books/odes", days: "many" }); } catch (e) { return e.message; }`,
+  });
   assert.match(String(completed(out)), /days/);
 });
 
@@ -69,7 +78,10 @@ test("a rejected call ends the execution", async () => {
   if (first.status !== "paused") return;
   assert.equal(await runtime.reject({ executionId: first.executionId, seq: first.pending[0]?.seq ?? 0 }), true);
   assert.equal((await runtime.getExecution(first.executionId))?.status, "rejected");
-  assert.equal([...library.books.values()].some((b) => b.state === "BOOK_STATE_ARCHIVED"), false);
+  assert.equal(
+    [...library.books.values()].some((b) => b.state === "BOOK_STATE_ARCHIVED"),
+    false,
+  );
 });
 
 test("rollback undoes applied calls through their generated reverts", async () => {
@@ -118,8 +130,13 @@ test("search and describe work from code and from the host", async () => {
 
 test("proto snippets are seeded, and saved snippets run", async () => {
   const { runtime } = setup();
-  assert.deepEqual((await runtime.snippets()).map((s) => s.name), ["move_shelf"]);
-  const src = await runtime.execute({ code: `const p = await library.listBooks({ parent: "shelves/poetry" }); return p.books.length;` });
+  assert.deepEqual(
+    (await runtime.snippets()).map((s) => s.name),
+    ["move_shelf"],
+  );
+  const src = await runtime.execute({
+    code: `const p = await library.listBooks({ parent: "shelves/poetry" }); return p.books.length;`,
+  });
   await runtime.saveSnippet("count_poetry", { executionId: src.executionId, description: "Counts poetry books" });
   assert.equal(completed(await runtime.execute({ code: `return await codemode.run("count_poetry");` })), 3);
 });
@@ -127,7 +144,9 @@ test("proto snippets are seeded, and saved snippets run", async () => {
 test("executions survive a new runtime on the same store", async () => {
   const store = new MemoryStore();
   const first = setup({ store });
-  const out = await first.runtime.execute({ code: `await library.archiveShelf({ name: "shelves/poetry" }); return "done";` });
+  const out = await first.runtime.execute({
+    code: `await library.archiveShelf({ name: "shelves/poetry" }); return "done";`,
+  });
   const second = setup({ store });
   assert.equal((await second.runtime.pending()).length, 1);
   assert.equal(completed(await second.runtime.approve({ executionId: out.executionId })), "done");

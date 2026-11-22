@@ -15,8 +15,19 @@ types, approval (`ArchiveShelf`, `MoveBook`), rollback (`CreateShelf`,
 | `src/mcp.ts` | The library as an MCP server on stdio |
 | `test/` | Codec, runtime and MCP tests |
 
+## Connect it to Claude
+
 ```sh
-npm run demo            # from this directory
-npm test                # Node; test:bun and test:deno for the other runtimes
+claude mcp add library -- bun "$PWD/src/mcp.ts"   # from this directory
+```
+
+See the [main README](../../README.md#try-it-with-claude) for Claude Desktop and
+other MCP clients.
+
+## Run it
+
+```sh
+bun run demo            # from this directory
+bun run test            # Bun; test:node and test:deno for the other runtimes
 just generate           # from the repository root, after changing a proto
 ```

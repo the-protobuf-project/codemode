@@ -31,22 +31,23 @@ generate: build
     rm -rf examples/library/gen
     buf generate --template examples/library/buf.gen.yaml
 
-# Lint protos, Go and the 200-line limit
+# Lint protos, Go, TypeScript (Biome) and the 200-line limit
 lint:
     buf lint
     go vet ./...
+    bun run lint
     ./scripts/check-lines.sh
 
-# Run Go tests, then the TypeScript tests on Node
+# Run Go tests, then type-check and test the example on Bun
 test:
     go test ./...
-    npm run typecheck
-    npm test
+    bun run typecheck
+    bun run test
 
-# Run the TypeScript tests on Bun and Deno too
+# Run the example's tests on Node and Deno too
 test-runtimes: test
-    npm run test:bun --workspaces --if-present
-    npm run test:deno --workspaces --if-present
+    bun run test:node
+    bun run test:deno
 
 # Fail if regenerating changes the committed example
 check-generated: generate

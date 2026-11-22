@@ -35,18 +35,6 @@ var wellKnown = map[protoreflect.FullName]*WellKnown{
 	"google.protobuf.BytesValue":  {Type: "string | null", Codec: "BytesValueCodec", Doc: "Bytes as base64."},
 }
 
-// sandboxPrelude declares the runtime types well-known types refer to, once,
-// at the top of sandbox.d.ts.
-const sandboxPrelude = `/** Any JSON value. */
-type JsonValue = null | boolean | number | string | JsonValue[] | JsonObject;
-/** A JSON object. */
-interface JsonObject { [key: string]: JsonValue }
-/** google.protobuf.Empty. */
-type Empty = Record<string, never>;
-/** google.protobuf.Any: "@type" plus the packed message's fields. */
-interface AnyMessage { "@type": string; [field: string]: unknown }
-`
-
 // lookupWellKnown returns the runtime codec for a google.protobuf message.
 func lookupWellKnown(name protoreflect.FullName) *WellKnown {
 	return wellKnown[name]

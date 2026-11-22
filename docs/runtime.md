@@ -1,6 +1,7 @@
 # Runtime
 
-`@the-protobuf-project/codemode` runs model code against generated connectors.
+The Code Mode runtime lives in [runtime-ts](https://github.com/the-protobuf-project/runtime-ts), the TypeScript runtime
+shared by every plugin, as the `@the-protobuf-project/codemode` package. It runs model code against generated connectors.
 It keeps no state in memory between calls: executions, their call logs and
 snippets live in a `Store`, so a runtime can be recreated, or moved, at any time.
 
@@ -50,10 +51,10 @@ changing values in `codemode.step(name, fn)`.
 
 | Executor | Import | Runs on | Isolation |
 | --- | --- | --- | --- |
-| `QuickJSExecutor` | `/quickjs` | Node, Bun, Deno, browsers | QuickJS in WebAssembly; memory cap; interrupt at the deadline |
-| `DenoExecutor` | `/deno` | Hosts with `deno` installed | A process with every permission denied; killed at the deadline |
-| `WorkerLoaderExecutor` | `/cloudflare` | Cloudflare Workers | A fresh isolate per pass; outbound blocked; calls over RPC |
-| `IframeExecutor` | `/browser` | Browsers | `sandbox="allow-scripts"` iframe with a no-network CSP |
+| `QuickJSExecutor` | `/codemode/quickjs` | Node, Bun, Deno, browsers | QuickJS in WebAssembly; memory cap; interrupt at the deadline |
+| `DenoExecutor` | `/codemode/deno` | Hosts with `deno` installed | A process with every permission denied; killed at the deadline |
+| `WorkerLoaderExecutor` | `/codemode/cloudflare` | Cloudflare Workers | A fresh isolate per pass; outbound blocked; calls over RPC |
+| `IframeExecutor` | `/codemode/browser` | Browsers | `sandbox="allow-scripts"` iframe with a no-network CSP |
 
 All of them run the same script and speak the same bridge, so behaviour does
 not change with the executor.
@@ -66,9 +67,9 @@ not change with the executor.
 ## Surfaces
 
 - `runtime.tool()` — a framework-neutral `{ name, description, inputSchema, execute }`
-- `createMcpServer(runtime, { expose })` from `/mcp` — `code`, or `search` and
+- `createMcpServer(runtime, { expose })` from `/codemode/mcp` — `code`, or `search` and
   `execute`, plus `codemode_approve` and `codemode_reject`. When the client
   supports elicitation, approvals are asked there and the call resumes in place.
-- `codemodeTool(runtime)` from `/ai` — a Vercel AI SDK tool
-- `cloudflareTools(connector, catalog)` from `/cloudflare` — tools for
+- `codemodeTool(runtime)` from `/codemode/ai` — a Vercel AI SDK tool
+- `cloudflareTools(connector, catalog)` from `/codemode/cloudflare` — tools for
   `@cloudflare/codemode`'s own durable runtime

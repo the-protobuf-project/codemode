@@ -4,45 +4,53 @@
 package generator
 
 import (
-	"strings"
-
 	"google.golang.org/protobuf/compiler/protogen"
 )
 
-// emitMessage writes messages/<name>.ts: the interface and its codec.
-func (cat *Catalog) emitMessage(gen *protogen.Plugin, m *Message) {
-	f := cat.newFile(m.File, m.Source)
-	n := moduleNamer{f}
-	f.body.WriteString(interfaceDecl(m, n, "export "))
-	f.P()
-	emitCodec(f, m, n)
-	f.emit(gen)
+// interfaceView is the "interface" template's data.
+type interfaceView struct {
+	Doc, Export, Name string
+	Fields            []propView
 }
 
-// interfaceDecl renders a message as an interface. The sandbox uses the
-// same text with sandbox names and no export.
-func interfaceDecl(m *Message, n typeNamer, export string) string {
-	var b strings.Builder
-	name := n.message(m)
-	b.WriteString(jsdoc("", m.Doc, messageNotes(m)...))
-	if len(m.Fields) == 0 {
-		b.WriteString(export + "type " + name + " = Record<string, never>;\n")
-		return b.String()
-	}
-	b.WriteString(export + "interface " + name + " {\n")
-	for i, f := range m.Fields {
-		if i > 0 {
-			b.WriteByte('\n')
-		}
-		b.WriteString(jsdoc("  ", f.Doc, fieldNotes(f)...))
+// propView is one interface property.
+type propView struct {
+	Doc, Key, Opt, Type string
+}
+
+// keyExpr is one property in an object literal.
+type keyExpr struct {
+	Key, Expr string
+}
+
+// messageView is message.ts.tpl's data: the interface and every statement of
+// its codec, resolved for the file.
+type messageView struct {
+	Decl                  interfaceView
+	Name, Codec, TypeName string
+	Empty, NeedsAll       bool
+	FromJSON, Init        []keyExpr
+	Oneofs                []struct{ Name, Fields string }
+	ToJSON, Encode        []string
+	Cases                 []decodeCase
+}
+
+func newInterface(m *Message, n typeNamer, export string) interfaceView {
+	v := interfaceView{Doc: jsdoc("", m.Doc, messageNotes(m)...), Export: export, Name: n.message(m)}
+	for _, f := range m.Fields {
 		opt := "?"
 		if f.Required {
 			opt = ""
 		}
-		b.WriteString("  " + propertyKey(f.JSONName) + opt + ": " + tsType(f, n) + ";\n")
+		v.Fields = append(v.Fields, propView{jsdoc("  ", f.Doc, fieldNotes(f)...), propertyKey(f.JSONName), opt, tsType(f, n)})
 	}
-	b.WriteString("}\n")
-	return b.String()
+	return v
+}
+
+// interfaceDecl renders a message as an interface. The sandbox uses the
+// same template with sandbox names and no export.
+func interfaceDecl(m *Message, n typeNamer, export string) string {
+	return renderString("interface", newInterface(m, n, export))
 }
 
 func messageNotes(m *Message) []string {
@@ -52,22 +60,25 @@ func messageNotes(m *Message) []string {
 	return []string{"Resource `" + m.Resource.Type + "`, named `" + m.Resource.Pattern + "`."}
 }
 
-// emitCodec writes the <Name>Codec constant.
-func emitCodec(f *tsFile, m *Message, n moduleNamer) {
-	f.runtimeType("MessageCodec")
-	name := m.Name
-	f.P("/** Converts {@link ", name, "} between its interface, protojson and the protobuf binary format. */")
-	f.P("export const ", m.Codec(), ": MessageCodec<", name, "> = {")
-	f.P("  typeName: ", tsString(string(m.Desc.FullName())), ",")
-	f.P()
-	emitFromJSON(f, m, n)
-	f.P()
-	emitToJSON(f, m)
-	f.P()
-	emitEncode(f, m)
-	f.P()
-	emitDecode(f, m, n)
-	f.P("};")
+// emitMessage writes messages/<name>.ts: the interface and its codec.
+func (cat *Catalog) emitMessage(gen *protogen.Plugin, m *Message) {
+	f := cat.newFile(m.File, m.Source)
+	n := moduleNamer{f}
+	f.runtime("protojson", "BinaryWriter", "BinaryReader")
+	f.runtimeType("MessageCodec", "JsonObject")
+	v := messageView{
+		Decl: newInterface(m, n, "export "), Name: m.Name, Codec: m.Codec(),
+		TypeName: string(m.Desc.FullName()), Empty: len(m.Fields) == 0, NeedsAll: usesDefaults(m),
+	}
+	if !v.Empty {
+		f.runtimeType("ToJsonOptions")
+		v.FromJSON, v.Oneofs = fromJSONFields(f, m, n), oneofChecks(m)
+		v.ToJSON = toJSONLines(f, m)
+		v.Encode = encodeLines(f, m)
+	}
+	v.Init, v.Cases = decodeInit(f, m, n), decodeCases(f, m, n)
+	f.render("message.ts.tpl", v)
+	f.emit(gen)
 }
 
 // codecOf returns the codec expression for a message, enum or well-known

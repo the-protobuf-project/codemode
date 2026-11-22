@@ -14,7 +14,12 @@
     "rewriteRelativeImportExtensions": true,
     "isolatedModules": true,
     "skipLibCheck": true,
-    "customConditions": ["source"]
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "forceConsistentCasingInFileNames": true
   },
   "include": ["gen", "src", "test"]
 }

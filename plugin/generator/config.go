@@ -23,7 +23,7 @@ type Config struct {
 	Approval        ApprovalConfig `yaml:"approval"`
 	Discovery       string         `yaml:"discovery"`
 	ImportExtension *string        `yaml:"import_extension"`
-	RuntimeModule   string         `yaml:"runtime_module"`
+	RuntimePrefix   string         `yaml:"runtime_prefix"`
 	Executor        ExecutorConfig `yaml:"executor"`
 	Runtime         RuntimeConfig  `yaml:"runtime"`
 	MCP             MCPConfig      `yaml:"mcp"`
@@ -86,8 +86,8 @@ func (c *Config) defaults() error {
 		}
 		return fmt.Errorf("codemode.yaml: %q is not one of %v", *v, allowed)
 	}
-	if c.RuntimeModule == "" {
-		c.RuntimeModule = "@the-protobuf-project/codemode"
+	if c.RuntimePrefix == "" {
+		c.RuntimePrefix = "@the-protobuf-project/"
 	}
 	for _, d := range []string{c.Executor.Timeout, c.Runtime.PausedTTL} {
 		if _, err := Millis(d); err != nil {

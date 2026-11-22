@@ -16,7 +16,7 @@ import {
   WireType,
   binary,
   protojson,
-} from "@the-protobuf-project/codemode";
+} from "@the-protobuf-project/protobuf";
 import { type Genre, GenreCodec } from "../enums/genre.ts";
 import type { ShelfName } from "../resources/shelf_name.ts";
 

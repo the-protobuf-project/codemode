@@ -12,7 +12,7 @@ plugins:
     opt:
       - config=codemode.yaml            # relative to where buf runs
       - import_extension=.ts            # .ts (Node, Bun, Deno), .js (compiled), none (bundlers)
-      - runtime_module=@the-protobuf-project/codemode
+      - runtime_prefix=@the-protobuf-project/   # code imports <prefix>protobuf, network, codemode
 ```
 
 ## codemode.yaml

@@ -34,6 +34,63 @@ Code Mode built from MCP tools types results as `unknown`, because most MCP tool
 have no output schema. A proto describes the full response, so the model knows
 the result's shape and chains calls correctly.
 
+<p align="center">
+  <img src="docs/architecture.svg" alt="How Code Mode works: protos generate typed TypeScript; at run time the model writes one function that a sandbox runs against your services" width="100%">
+</p>
+
+## Try it with Claude
+
+The library example runs as an MCP server on stdio, with one `code` tool. You
+need [Bun](https://bun.sh) and a GitHub token that can read packages, because
+the runtime comes from GitHub Packages:
+
+```sh
+gh auth refresh -s read:packages && export GITHUB_TOKEN=$(gh auth token)
+git clone https://github.com/the-protobuf-project/codemode.git
+cd codemode && bun install
+```
+
+**Claude Code**
+
+```sh
+claude mcp add library -- bun "$PWD/examples/library/src/mcp.ts"
+```
+
+**Claude Desktop**: add this to `claude_desktop_config.json` (Settings → Developer →
+Edit Config), using absolute paths. Desktop apps do not see your shell's `PATH`,
+so give the full path of `bun` (`which bun`):
+
+```json
+{
+  "mcpServers": {
+    "library": {
+      "command": "/absolute/path/to/bun",
+      "args": ["/absolute/path/to/codemode/examples/library/src/mcp.ts"],
+      "env": { "CODEMODE_DB": "/absolute/path/to/library.db" }
+    }
+  }
+}
+```
+
+**Other MCP clients** (Cursor, VS Code, Zed, the MCP Inspector) take the same
+command. To look at the tools first:
+
+```sh
+bunx @modelcontextprotocol/inspector bun examples/library/src/mcp.ts
+```
+
+Then ask something that needs several calls, for example *"Which shelves have
+books, and lend the shortest poetry book to Ada for a week"*, or *"Archive the
+fiction shelf"* to see an approval pause. `CODEMODE_DB` is optional: set it to
+keep executions in SQLite across restarts. The library itself is in memory and
+resets when the server starts.
+
+> [!NOTE]
+> When the client supports MCP elicitation, approvals are asked there. Otherwise
+> the server returns `paused` and the model resumes with `codemode_approve`, so
+> leave that tool on "ask before running" in your client: its permission prompt
+> is the human approval.
+
 ## How it works
 
 **1. Annotate.** Annotations from [`protoc-gen-mcp`](https://github.com/the-protobuf-project/mcp)
@@ -69,11 +126,15 @@ export interface Book {
 export const BookCodec: MessageCodec<Book>;  // fromJson, toJson, encode, decode
 ```
 
-**3. Run.** Wire the generated connectors into the runtime and hand the model one tool:
+**3. Run.** Generated code builds on [runtime-ts](https://github.com/the-protobuf-project/runtime-ts)
+(the `@the-protobuf-project/*` runtime-ts packages on GitHub Packages), the TypeScript runtime
+shared by every plugin. Wire the
+generated connectors into its Code Mode runtime and hand the model one tool:
 
 ```ts
-import { createCodemode, httpTransport } from "@the-protobuf-project/codemode";
+import { createCodemode } from "@the-protobuf-project/codemode";
 import { QuickJSExecutor } from "@the-protobuf-project/codemode/quickjs";
+import { httpTransport } from "@the-protobuf-project/network";
 import { catalog, config, connectors, libraryV1 } from "./gen/index.ts";
 
 const client = new libraryV1.LibraryServiceClient(httpTransport({ baseUrl: "https://library.example.com" }));
@@ -112,11 +173,14 @@ generated reverts.
 ```
 protobuf/codemode/v1/      codemode.v1 annotations (protobuf/codemodepb: Go types)
 plugin/                    protoc-gen-codemode, on protokit
-packages/runtime/          @the-protobuf-project/codemode: codecs, transports, sandboxes, runtime
 examples/library/          annotated protos, generated code, an in-memory service, tests
 schema/                    JSON Schema for codemode.yaml
 docs/                      annotations, configuration, generated code, runtime, security
 ```
+
+The runtime the generated code imports lives in its own repository,
+[runtime-ts](https://github.com/the-protobuf-project/runtime-ts), next to
+[runtime-go](https://github.com/the-protobuf-project/runtime-go).
 
 ## Documentation
 
@@ -128,14 +192,15 @@ docs/                      annotations, configuration, generated code, runtime, 
 
 ## Development
 
-Requires Go 1.26+, [buf](https://buf.build), Node 22.6+ and [just](https://just.systems);
-Bun and Deno to run those suites.
+Requires Go 1.26+, [buf](https://buf.build), [Bun](https://bun.sh) and
+[just](https://just.systems); Node 22.18+ and Deno to run those suites. Set
+`GITHUB_TOKEN` as in [Try it with Claude](#try-it-with-claude) before `bun install`.
 
 ```sh
-npm install
+bun install
 just generate        # build the plugin and regenerate examples/library/gen
-just test            # Go tests (including a golden test of the example), type-check, Node tests
-just test-runtimes   # the same TypeScript tests on Bun and Deno
+just test            # Go tests (including a golden test of the example), type-check, Bun tests
+just test-runtimes   # the example's tests on Node and Deno too
 just lint            # buf lint, go vet, and the 200-line limit on hand-written files
 ```
 

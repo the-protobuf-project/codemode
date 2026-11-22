@@ -15,7 +15,7 @@ import {
   WireType,
   binary,
   protojson,
-} from "@the-protobuf-project/codemode";
+} from "@the-protobuf-project/protobuf";
 import { type Book, BookCodec } from "./book.ts";
 
 /** Response for ListBooks. */

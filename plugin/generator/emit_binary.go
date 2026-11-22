@@ -15,6 +15,7 @@ func writeElem(f *tsFile, fd *Field, no int, v string) string {
 		f.runtime("binary")
 		return fmt.Sprintf("binary.message(w, %d, %s, %s)", no, codecOf(f, fd), v)
 	}
+	f.runtime("WireType")
 	s := scalars[fd.Desc.Kind()]
 	return fmt.Sprintf("w.tag(%d, WireType.%s).%s(%s)", no, s.WireType, s.Method, binaryIn(f, fd, v))
 }
@@ -59,103 +60,96 @@ func mapKeyIn(fd *Field) string {
 	return "Number(k)"
 }
 
-// emitEncode writes encode: the binary format, defaults left out.
-func emitEncode(f *tsFile, m *Message) {
-	f.runtime("BinaryWriter")
-	if len(m.Fields) == 0 {
-		f.P("  encode(_m: ", m.Name, ", w: BinaryWriter = new BinaryWriter()): BinaryWriter {")
-		f.P("    return w;")
-		f.P("  },")
-		return
-	}
-	f.runtime("WireType")
-	f.P("  encode(m: ", m.Name, ", w: BinaryWriter = new BinaryWriter()): BinaryWriter {")
+// encodeLines is the body of encode: the binary format, defaults left out.
+// Blocks span several lines, indented relative to the method body.
+func encodeLines(f *tsFile, m *Message) []string {
+	var out []string
 	for _, fd := range m.Fields {
 		no := int(fd.Desc.Number())
 		a := access(fd)
 		switch {
 		case fd.MapKey != nil:
-			f.P("    for (const [k, v] of Object.entries(", a, " ?? {})) {")
-			f.P("      w.tag(", no, ", WireType.LengthDelimited).fork();")
-			f.P("      ", writeElem(f, fd.MapKey, 1, mapKeyIn(fd.MapKey)), ";")
-			f.P("      ", writeElem(f, fd.MapValue, 2, "v"), ";")
-			f.P("      w.join();")
-			f.P("    }")
+			f.runtime("WireType")
+			out = append(out,
+				"for (const [k, v] of Object.entries("+a+" ?? {})) {",
+				fmt.Sprintf("  w.tag(%d, WireType.LengthDelimited).fork();", no),
+				"  "+writeElem(f, fd.MapKey, 1, mapKeyIn(fd.MapKey))+";",
+				"  "+writeElem(f, fd.MapValue, 2, "v")+";",
+				"  w.join();",
+				"}")
 		case fd.Desc.IsList() && fd.Desc.IsPacked() && isScalar(fd):
-			s := scalars[fd.Desc.Kind()]
-			f.P("    if (", a, "?.length) {")
-			f.P("      w.tag(", no, ", WireType.LengthDelimited).fork();")
-			f.P("      for (const v of ", a, ") w.", s.Method, "(", binaryIn(f, fd, "v"), ");")
-			f.P("      w.join();")
-			f.P("    }")
+			f.runtime("WireType")
+			out = append(out,
+				"if ("+a+"?.length) {",
+				fmt.Sprintf("  w.tag(%d, WireType.LengthDelimited).fork();", no),
+				"  for (const v of "+a+") w."+scalars[fd.Desc.Kind()].Method+"("+binaryIn(f, fd, "v")+");",
+				"  w.join();",
+				"}")
 		case fd.Desc.IsList():
-			f.P("    for (const v of ", a, " ?? []) ", writeElem(f, fd, no, "v"), ";")
+			out = append(out, "for (const v of "+a+" ?? []) "+writeElem(f, fd, no, "v")+";")
 		default:
-			f.P("    if (", presentCheck(f, fd), ") ", writeElem(f, fd, no, a), ";")
+			out = append(out, "if ("+presentCheck(f, fd)+") "+writeElem(f, fd, no, a)+";")
 		}
 	}
-	f.P("    return w;")
-	f.P("  },")
+	return out
 }
 
-// emitDecode writes decode: defaults first, then each field as it arrives.
-func emitDecode(f *tsFile, m *Message, n moduleNamer) {
-	f.runtime("BinaryReader")
-	f.P("  decode(input: Uint8Array | BinaryReader, length?: number): ", m.Name, " {")
-	f.P("    const r = input instanceof BinaryReader ? input : new BinaryReader(input);")
-	f.P("    const end = r.end(length);")
-	f.P("    const m: ", m.Name, " = {")
+// decodeInit is the object decode starts from: defaults for fields without
+// presence, and empty messages for required ones.
+func decodeInit(f *tsFile, m *Message, n moduleNamer) []keyExpr {
+	var out []keyExpr
 	for _, fd := range m.Fields {
+		key := propertyKey(fd.JSONName)
 		switch {
 		case fd.MapKey != nil:
-			f.P("      ", propertyKey(fd.JSONName), ": {},")
+			out = append(out, keyExpr{key, "{}"})
 		case fd.Desc.IsList():
-			f.P("      ", propertyKey(fd.JSONName), ": [],")
+			out = append(out, keyExpr{key, "[]"})
 		case !fd.Explicit && isScalar(fd):
-			f.P("      ", propertyKey(fd.JSONName), ": ", zero(f, fd, n), ",")
+			out = append(out, keyExpr{key, zero(f, fd, n)})
 		case fd.Required && !isScalar(fd):
-			f.P("      ", propertyKey(fd.JSONName), ": ", mapValueZero(f, fd, n), ",")
+			out = append(out, keyExpr{key, mapValueZero(f, fd, n)})
 		}
 	}
-	f.P("    };")
-	f.P("    while (r.pos < end) {")
-	f.P("      const [no, wt] = r.tag();")
-	f.P("      switch (no) {")
+	return out
+}
+
+// decodeCase is one field number's branch of decode's switch.
+type decodeCase struct {
+	No    int
+	Lines []string
+}
+
+// decodeCases reads each field as it arrives; a oneof member clears the others.
+func decodeCases(f *tsFile, m *Message, n moduleNamer) []decodeCase {
+	var out []decodeCase
 	for _, fd := range m.Fields {
 		a := access(fd)
-		f.P("        case ", fd.Desc.Number(), ":")
+		c := decodeCase{No: int(fd.Desc.Number())}
 		switch {
 		case fd.MapKey != nil:
 			f.runtime("binary")
 			read := "binary.mapEntry(r, (x) => " + readElem(f, fd.MapKey, "x", n) + ", (x) => " + readElem(f, fd.MapValue, "x", n) +
 				", " + zero(f, fd.MapKey, n) + ", () => " + mapValueZero(f, fd.MapValue, n) + ")"
-			f.P("          {")
-			f.P("            const [k, v] = ", read, ";")
-			f.P("            (", a, " ??= {})[String(k)] = v;")
-			f.P("          }")
+			c.Lines = []string{"{", "  const [k, v] = " + read + ";", "  (" + a + " ??= {})[String(k)] = v;", "}"}
 		case fd.Desc.IsList() && isScalar(fd) && scalars[fd.Desc.Kind()].Packable:
 			f.runtime("binary")
-			f.P("          binary.packed(r, wt, (x) => ", readElem(f, fd, "x", n), ", (", a, " ??= []));")
+			c.Lines = []string{"binary.packed(r, wt, (x) => " + readElem(f, fd, "x", n) + ", (" + a + " ??= []));"}
 		case fd.Desc.IsList():
-			f.P("          (", a, " ??= []).push(", readElem(f, fd, "r", n), ");")
+			c.Lines = []string{"(" + a + " ??= []).push(" + readElem(f, fd, "r", n) + ");"}
 		default:
-			f.P("          ", a, " = ", readElem(f, fd, "r", n), ";")
+			c.Lines = []string{a + " = " + readElem(f, fd, "r", n) + ";"}
 			if fd.Oneof != nil {
 				for _, other := range fd.Oneof.Fields {
 					if other != fd {
-						f.P("          ", access(other), " = undefined;")
+						c.Lines = append(c.Lines, access(other)+" = undefined;")
 					}
 				}
 			}
 		}
-		f.P("          break;")
+		out = append(out, c)
 	}
-	f.P("        default:")
-	f.P("          r.skip(wt, no);")
-	f.P("      }")
-	f.P("    }")
-	f.P("    return m;")
-	f.P("  },")
+	return out
 }
 
 // mapValueZero is the value a map entry gets when its value is missing.

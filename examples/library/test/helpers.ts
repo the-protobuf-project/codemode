@@ -1,8 +1,9 @@
 // Copyright 2026 The Protobuf Project authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { CodemodeRuntime, MemoryStore, connectHandler, connectTransport, type Store } from "@the-protobuf-project/codemode";
+import { CodemodeRuntime, MemoryStore, type Store } from "@the-protobuf-project/codemode";
 import { QuickJSExecutor } from "@the-protobuf-project/codemode/quickjs";
+import { connectHandler, connectTransport } from "@the-protobuf-project/network";
 import { catalog, config, connectors, libraryV1 } from "../gen/index.ts";
 import { InMemoryLibrary } from "../src/library.ts";
 
@@ -15,7 +16,11 @@ export function setup(options: { store?: Store; discovery?: "inline" | "progress
   );
   const runtime = new CodemodeRuntime({
     catalog,
-    config: { ...config, discovery: options.discovery ?? config.discovery, executor: { ...config.executor, timeoutMs: 2000 } },
+    config: {
+      ...config,
+      discovery: options.discovery ?? config.discovery,
+      executor: { ...config.executor, timeoutMs: 2000 },
+    },
     connectors: connectors({ library: client }),
     executor: new QuickJSExecutor(),
     store: options.store ?? new MemoryStore(),

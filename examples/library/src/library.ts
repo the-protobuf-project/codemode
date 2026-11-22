@@ -1,7 +1,8 @@
 // Copyright 2026 The Protobuf Project authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { CodemodeError, type Empty } from "@the-protobuf-project/codemode";
+import { StatusError } from "@the-protobuf-project/errors";
+import type { Empty } from "@the-protobuf-project/protobuf";
 import { libraryV1 } from "../gen/index.ts";
 
 type Book = libraryV1.Book;
@@ -22,7 +23,11 @@ export class InMemoryLibrary implements libraryV1.LibraryService {
   /** Adds the sample shelves and books the demo and tests start from. */
   static seeded(): InMemoryLibrary {
     const lib = new InMemoryLibrary();
-    const poetry = lib.put({ name: ShelfName.format({ shelf: "poetry" }), displayName: "Poetry", genre: "GENRE_POETRY" });
+    const poetry = lib.put({
+      name: ShelfName.format({ shelf: "poetry" }),
+      displayName: "Poetry",
+      genre: "GENRE_POETRY",
+    });
     lib.put({ name: ShelfName.format({ shelf: "fiction" }), displayName: "Fiction", genre: "GENRE_FICTION" });
     for (const [id, title, author] of [
       ["leaves", "Leaves of Grass", "Walt Whitman"],
@@ -30,8 +35,12 @@ export class InMemoryLibrary implements libraryV1.LibraryService {
       ["ariel", "Ariel", "Sylvia Plath"],
     ] as const) {
       lib.books.set(BookName.format({ shelf: "poetry", book: id }), {
-        name: BookName.format({ shelf: "poetry", book: id }), title, authors: [author],
-        state: "BOOK_STATE_AVAILABLE", pageCount: "120", createTime: "2026-01-01T00:00:00Z",
+        name: BookName.format({ shelf: "poetry", book: id }),
+        title,
+        authors: [author],
+        state: "BOOK_STATE_AVAILABLE",
+        pageCount: "120",
+        createTime: "2026-01-01T00:00:00Z",
       });
     }
     poetry.bookCount = 3;
@@ -57,7 +66,10 @@ export class InMemoryLibrary implements libraryV1.LibraryService {
   }
 
   async listShelves(req: libraryV1.ListShelvesRequest): Promise<libraryV1.ListShelvesResponse> {
-    return page([...this.shelves.values()], req.pageSize, req.pageToken, (shelves, next) => ({ shelves, nextPageToken: next }));
+    return page([...this.shelves.values()], req.pageSize, req.pageToken, (shelves, next) => ({
+      shelves,
+      nextPageToken: next,
+    }));
   }
 
   async getShelf(req: libraryV1.GetShelfRequest): Promise<Shelf> {
@@ -83,7 +95,9 @@ export class InMemoryLibrary implements libraryV1.LibraryService {
   async listBooks(req: libraryV1.ListBooksRequest): Promise<libraryV1.ListBooksResponse> {
     this.shelf(req.parent);
     const all = [...this.books.values()].filter(
-      (b) => b.name?.startsWith(`${req.parent}/`) && (!req.state || req.state === "BOOK_STATE_UNSPECIFIED" || b.state === req.state),
+      (b) =>
+        b.name?.startsWith(`${req.parent}/`) &&
+        (!req.state || req.state === "BOOK_STATE_UNSPECIFIED" || b.state === req.state),
     );
     return page(all, req.pageSize, req.pageToken, (books, next) => ({ books, nextPageToken: next }));
   }
@@ -141,7 +155,10 @@ export class InMemoryLibrary implements libraryV1.LibraryService {
     const book = this.book(req.name);
     this.shelf(req.destination);
     const from = `shelves/${BookName.parse(req.name).shelf}`;
-    const name = BookName.format({ shelf: ShelfName.parse(req.destination).shelf, book: BookName.parse(req.name).book });
+    const name = BookName.format({
+      shelf: ShelfName.parse(req.destination).shelf,
+      book: BookName.parse(req.name).book,
+    });
     this.books.delete(req.name);
     const moved: Book = { ...book, name };
     this.books.set(name, moved);
@@ -164,10 +181,15 @@ export class InMemoryLibrary implements libraryV1.LibraryService {
 }
 
 function fail(code: "NOT_FOUND" | "ALREADY_EXISTS" | "FAILED_PRECONDITION", message: string): never {
-  throw new CodemodeError(code, message);
+  throw new StatusError(code, message);
 }
 
-function page<T, R>(all: T[], size: number | undefined, token: string | undefined, wrap: (items: T[], next: string) => R): R {
+function page<T, R>(
+  all: T[],
+  size: number | undefined,
+  token: string | undefined,
+  wrap: (items: T[], next: string) => R,
+): R {
   const start = token ? Number(token) : 0;
   const end = start + (size && size > 0 ? size : 50);
   return wrap(all.slice(start, end), end < all.length ? String(end) : "");

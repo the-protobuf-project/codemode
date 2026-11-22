@@ -7,29 +7,69 @@
   "additionalProperties": false,
   "properties": {
     "version": { "const": "v1" },
-    "include": { "type": "array", "items": { "type": "string" }, "description": "Service full-name globs to expose, e.g. library.v1.*. Default: all." },
+    "include": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Service full-name globs to expose, e.g. library.v1.*. Default: all."
+    },
     "exclude": { "type": "array", "items": { "type": "string" }, "description": "Service full-name globs to hide." },
-    "naming": { "enum": ["lowerCamel", "snake"], "default": "lowerCamel", "description": "Sandbox method names: library.createBook or library.create_book." },
+    "naming": {
+      "enum": ["lowerCamel", "snake"],
+      "default": "lowerCamel",
+      "description": "Sandbox method names: library.createBook or library.create_book."
+    },
     "approval": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "destructive": { "enum": ["require", "allow"], "default": "require", "description": "Whether destructive methods pause for approval." },
-        "elicitation": { "enum": ["require", "allow"], "default": "require", "description": "Whether methods with mcp.v1.elicitation pause for approval." },
-        "infer_from_aip": { "type": "boolean", "default": true, "description": "Treat unannotated Delete*, Purge* and Remove* methods as destructive." }
+        "destructive": {
+          "enum": ["require", "allow"],
+          "default": "require",
+          "description": "Whether destructive methods pause for approval."
+        },
+        "elicitation": {
+          "enum": ["require", "allow"],
+          "default": "require",
+          "description": "Whether methods with mcp.v1.elicitation pause for approval."
+        },
+        "infer_from_aip": {
+          "type": "boolean",
+          "default": true,
+          "description": "Treat unannotated Delete*, Purge* and Remove* methods as destructive."
+        }
       }
     },
-    "discovery": { "enum": ["progressive", "inline"], "default": "progressive", "description": "progressive: namespaces in the tool description, types through describe(). inline: every type in the description." },
-    "import_extension": { "type": "string", "default": ".ts", "description": "Extension on relative imports: .ts for Node, Bun and Deno; .js for compiled output; empty for bundlers." },
-    "runtime_module": { "type": "string", "default": "@the-protobuf-project/codemode" },
+    "discovery": {
+      "enum": ["progressive", "inline"],
+      "default": "progressive",
+      "description": "progressive: namespaces in the tool description, types through describe(). inline: every type in the description."
+    },
+    "import_extension": {
+      "type": "string",
+      "default": ".ts",
+      "description": "Extension on relative imports: .ts for Node, Bun and Deno; .js for compiled output; empty for bundlers."
+    },
+    "runtime_prefix": {
+      "type": "string",
+      "default": "@the-protobuf-project/",
+      "description": "Prefix of the runtime-ts package names; generated code imports <prefix>protobuf, <prefix>network and <prefix>codemode."
+    },
     "executor": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "timeout": { "type": "string", "default": "30s", "description": "Deadline for each sandbox pass, as a Go duration." },
+        "timeout": {
+          "type": "string",
+          "default": "30s",
+          "description": "Deadline for each sandbox pass, as a Go duration."
+        },
         "memory_mb": { "type": "integer", "minimum": 1, "default": 64 },
         "outbound": { "enum": ["none", "allowlist"], "default": "none" },
-        "allow": { "type": "array", "items": { "type": "string" }, "description": "Hosts reachable when outbound is allowlist." }
+        "allow": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Hosts reachable when outbound is allowlist."
+        }
       }
     },
     "runtime": {

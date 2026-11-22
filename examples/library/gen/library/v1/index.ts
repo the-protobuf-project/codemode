@@ -7,7 +7,7 @@
 //
 // codemode — https://github.com/the-protobuf-project/codemode
 
-import { registerTypes } from "@the-protobuf-project/codemode";
+import { registerTypes } from "@the-protobuf-project/protobuf";
 import { ArchiveShelfRequestCodec } from "./messages/archive_shelf_request.ts";
 import { ArchiveShelfResponseCodec } from "./messages/archive_shelf_response.ts";
 import { BookCodec } from "./messages/book.ts";

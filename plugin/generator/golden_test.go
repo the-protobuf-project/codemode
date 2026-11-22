@@ -48,8 +48,8 @@ func generateLibrary(t *testing.T, param string) *pluginpb.CodeGeneratorResponse
 		switch name {
 		case "config":
 			opts.Config = value
-		case "runtime_module":
-			opts.RuntimeModule = value
+		case "runtime_prefix":
+			opts.RuntimePrefix = value
 		}
 		return nil
 	}}.New(req)
@@ -68,7 +68,7 @@ func generateLibrary(t *testing.T, param string) *pluginpb.CodeGeneratorResponse
 }
 
 func TestGoldenLibrary(t *testing.T) {
-	res := generateLibrary(t, "config=../../examples/library/codemode.yaml,runtime_module=@the-protobuf-project/codemode")
+	res := generateLibrary(t, "config=../../examples/library/codemode.yaml,runtime_prefix=@the-protobuf-project/")
 	seen := map[string]bool{}
 	for _, f := range res.GetFile() {
 		seen[f.GetName()] = true

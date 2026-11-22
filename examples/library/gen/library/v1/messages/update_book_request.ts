@@ -13,10 +13,9 @@ import {
   type JsonObject,
   type MessageCodec,
   type ToJsonOptions,
-  WireType,
   binary,
   protojson,
-} from "@the-protobuf-project/codemode";
+} from "@the-protobuf-project/protobuf";
 import { type Book, BookCodec } from "./book.ts";
 
 /** Request for UpdateBook. */
@@ -50,7 +49,6 @@ export const UpdateBookRequestCodec: MessageCodec<UpdateBookRequest> = {
   },
 
   toJson(m: UpdateBookRequest, options?: ToJsonOptions): JsonObject {
-    const all = options?.emitDefaults === true;
     const o: JsonObject = {};
     if (m.book != null) o["book"] = BookCodec.toJson(m.book, options);
     if (m.updateMask != null) o["updateMask"] = FieldMaskCodec.toJson(m.updateMask, options);
