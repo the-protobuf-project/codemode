@@ -1,0 +1,54 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build and release
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+      - uses: bufbuild/buf-action@v1
+        with:
+          setup_only: true
+
+      - name: Tag is semver
+        run: |
+          TAG="${GITHUB_REF#refs/tags/}"
+          echo "$TAG" | grep -qE '^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$' || {
+            echo "tag $TAG is not v<major>.<minor>.<patch>"; exit 1; }
+          echo "VERSION=$TAG" >> "$GITHUB_ENV"
+
+      - name: Lint and test
+        run: |
+          buf lint
+          go vet ./...
+          go test ./...
+
+      # The first push creates the public module; later pushes add a label.
+      - name: Push annotations to the BSR
+        working-directory: protobuf
+        run: buf push --create --create-visibility public --label "$VERSION"
+        env:
+          BUF_TOKEN: ${{ secrets.BUF_TOKEN }}
+
+      # Cross-platform binaries, archives, checksums, the GitHub release and,
+      # when HOMEBREW_TAP_GITHUB_TOKEN is set, the Homebrew cask.
+      - uses: goreleaser/goreleaser-action@v7
+        with:
+          version: "~> v2"
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          HOMEBREW_TAP_GITHUB_TOKEN: ${{ secrets.HOMEBREW_TAP_GITHUB_TOKEN }}

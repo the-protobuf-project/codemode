@@ -1,0 +1,121 @@
+version: 2
+project_name: protoc-gen-codemode
+
+builds:
+  - id: protoc-gen-codemode
+    binary: protoc-gen-codemode
+    main: ./plugin/cmd/protoc-gen-codemode
+    env:
+      - CGO_ENABLED=0
+    goos: [linux, darwin, windows]
+    goarch: [amd64, arm64]
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w -X main.version=v{{.Version}}
+
+archives:
+  - id: protoc-gen-codemode-archive
+    ids: [protoc-gen-codemode]
+    formats: [tar.gz]
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    files:
+      - LICENSE
+      - README.md
+    format_overrides:
+      - goos: windows
+        formats: [zip]
+
+checksum:
+  name_template: checksums.txt
+
+changelog:
+  sort: asc
+  use: github
+  groups:
+    - title: Features
+      regexp: '^.*?feat(\([[:word:]]+\))??!?:.+$'
+      order: 0
+    - title: Bug Fixes
+      regexp: '^.*?fix(\([[:word:]]+\))??!?:.+$'
+      order: 1
+    - title: Others
+      order: 999
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^chore:"
+
+# Homebrew cask, committed to the tap on each release. Needs a
+# HOMEBREW_TAP_GITHUB_TOKEN secret with push access to the tap; without one the
+# cask is skipped and the rest of the release still goes out.
+homebrew_casks:
+  - name: protoc-gen-codemode
+    repository:
+      owner: the-protobuf-project
+      name: homebrew-tap
+      token: '{{ envOrDefault "HOMEBREW_TAP_GITHUB_TOKEN" "" }}'
+    skip_upload: '{{ if eq (envOrDefault "HOMEBREW_TAP_GITHUB_TOKEN" "") "" }}true{{ end }}'
+    directory: Casks
+    homepage: https://github.com/the-protobuf-project/codemode
+    description: Protoc plugin generating typed, sandboxed Code Mode APIs from gRPC protos
+    ids: [protoc-gen-codemode-archive]
+    binaries: [protoc-gen-codemode]
+    custom_block: |
+      postflight_steps do
+        on_macos do
+          run "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "protoc-gen-codemode"], chdir: "."
+        end
+      end
+
+release:
+  github:
+    owner: the-protobuf-project
+    name: codemode
+  prerelease: auto
+  name_template: v{{.Version}}
+  header: |
+    ## codemode v{{.Version}}
+
+    `protoc-gen-codemode` generates a typed, sandboxed Code Mode API from your
+    gRPC services: AI agents write TypeScript against it instead of calling one
+    tool at a time. Work in progress; expect breaking changes before v1.
+
+    ### Install the plugin
+
+    ```bash
+    brew install the-protobuf-project/tap/protoc-gen-codemode
+    # or
+    go install github.com/the-protobuf-project/codemode/plugin/cmd/protoc-gen-codemode@v{{.Version}}
+    ```
+
+    ### Annotations
+
+    ```yaml
+    # buf.yaml
+    deps:
+      - buf.build/the-protobuf-project/codemode
+    ```
+
+    ### Generate
+
+    ```yaml
+    # buf.gen.yaml
+    plugins:
+      - local: protoc-gen-codemode
+        out: gen
+        strategy: all
+        opt: [lang=typescript, config=codemode.yaml]
+    ```
+
+    ### Runtime
+
+    The generated code runs on the runtime-ts packages
+    (`@the-protobuf-project/codemode`, `network`, `protobuf`, `errors`) from
+    GitHub Packages:
+
+    ```ini
+    # .npmrc
+    @the-protobuf-project:registry=https://npm.pkg.github.com
+    ```
