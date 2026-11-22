@@ -1,0 +1,14 @@
+# Generates Go types for the Code Mode annotations into protobuf/codemodepb, so
+# the plugin reads options from this repository's own schema rather than the
+# last published BSR snapshot.
+#
+# This output is for the plugin only. Generated user code consumes the
+# published module (see examples/buf.gen.yaml).
+version: v2
+inputs:
+  - directory: .
+plugins:
+  - remote: buf.build/protocolbuffers/go
+    out: ..
+    opt:
+      - module=github.com/the-protobuf-project/codemode

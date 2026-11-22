@@ -1,0 +1,107 @@
+// Copyright 2026 The Protobuf Project authors.
+// SPDX-License-Identifier: Apache-2.0
+
+syntax = "proto3";
+
+package codemode.v1;
+
+import "google/protobuf/descriptor.proto";
+
+option go_package = "github.com/the-protobuf-project/codemode/protobuf/codemodepb";
+option java_multiple_files = true;
+option java_outer_classname = "AnnotationsProto";
+option java_package = "com.codemode.v1";
+
+// Code Mode options for a service. Every field is optional; a service with no
+// options is exposed under its snake_case name.
+extend google.protobuf.ServiceOptions {
+  optional CodemodeService service = 51100;
+}
+
+// Code Mode options for one RPC. They take precedence over the mcp.v1 hints.
+extend google.protobuf.MethodOptions {
+  optional CodemodeMethod method = 51101;
+}
+
+// How a service appears inside the sandbox.
+message CodemodeService {
+  // The sandbox global the service's methods hang off, e.g. "library". It must
+  // be a valid JavaScript identifier. Defaults to the snake_case service name
+  // without a trailing "_service".
+  optional string namespace = 1;
+
+  // Guidance shown to the model next to the namespace. Defaults to the
+  // mcp.v1 app description, then to the service's leading comment.
+  optional string instructions = 2;
+
+  // Reusable code shipped with the API and seeded into the snippet store.
+  repeated Snippet snippets = 3;
+
+  // Hide the whole service from the sandbox.
+  bool exclude = 4;
+}
+
+// How one RPC behaves inside the sandbox.
+message CodemodeMethod {
+  // Hide the method from the sandbox.
+  bool exclude = 1;
+
+  // Whether a call pauses for a person's approval. Overrides mcp.v1 hints.
+  Approval approval = 2;
+
+  // What happens to this call when an execution is replayed.
+  Replay replay = 3;
+
+  // The compensating call that undoes this one on rollback.
+  optional Revert revert = 4;
+
+  // Example code shown by codemode.describe() for this method.
+  repeated string examples = 5;
+}
+
+// Approval policy for a method.
+enum Approval {
+  // Inferred from mcp.v1 hints and the AIP method kind.
+  APPROVAL_UNSPECIFIED = 0;
+  // Every call pauses until a person approves it.
+  APPROVAL_REQUIRED = 1;
+  // Calls never pause, even when hints say the method is destructive.
+  APPROVAL_NONE = 2;
+}
+
+// Replay policy for a method.
+enum Replay {
+  // REEXECUTE for read-only methods, LOG for everything else.
+  REPLAY_UNSPECIFIED = 0;
+  // A replayed call returns the result recorded the first time.
+  REPLAY_LOG = 1;
+  // A replayed call runs again. Not allowed together with approval.
+  REPLAY_REEXECUTE = 2;
+}
+
+// A compensating call in the same service.
+message Revert {
+  // The RPC name, e.g. "DeleteBook".
+  string method = 1;
+
+  // Revert request fields, keyed by proto field name, to a source path:
+  // "args.<field>" reads the original request and "result.<field>" the
+  // original response. Nested paths use dots.
+  map<string, string> fields = 2;
+}
+
+// Code that ships with an API and is callable through codemode.run(name).
+message Snippet {
+  // Unique name, used by codemode.run(name, input).
+  string name = 1;
+
+  // What the snippet does; searchable.
+  string description = 2;
+
+  // An async function taking one input argument: "async (input) => { ... }".
+  string code = 3;
+
+  // Fully qualified message whose shape types the input, e.g.
+  // "library.v1.MoveBooksInput".
+  optional string input_type = 4;
+}
