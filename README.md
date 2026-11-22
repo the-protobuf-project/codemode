@@ -127,14 +127,14 @@ export const BookCodec: MessageCodec<Book>;  // fromJson, toJson, encode, decode
 ```
 
 **3. Run.** Generated code builds on [runtime-ts](https://github.com/the-protobuf-project/runtime-ts)
-(the `@the-protobuf-project/runtime-ts-*` packages on GitHub Packages), the TypeScript runtime
+(the `@the-protobuf-project/*` runtime-ts packages on GitHub Packages), the TypeScript runtime
 shared by every plugin. Wire the
 generated connectors into its Code Mode runtime and hand the model one tool:
 
 ```ts
-import { createCodemode } from "@the-protobuf-project/runtime-ts-codemode";
-import { QuickJSExecutor } from "@the-protobuf-project/runtime-ts-codemode/quickjs";
-import { httpTransport } from "@the-protobuf-project/runtime-ts-network";
+import { createCodemode } from "@the-protobuf-project/codemode";
+import { QuickJSExecutor } from "@the-protobuf-project/codemode/quickjs";
+import { httpTransport } from "@the-protobuf-project/network";
 import { catalog, config, connectors, libraryV1 } from "./gen/index.ts";
 
 const client = new libraryV1.LibraryServiceClient(httpTransport({ baseUrl: "https://library.example.com" }));

@@ -68,7 +68,7 @@ func generateLibrary(t *testing.T, param string) *pluginpb.CodeGeneratorResponse
 }
 
 func TestGoldenLibrary(t *testing.T) {
-	res := generateLibrary(t, "config=../../examples/library/codemode.yaml,runtime_prefix=@the-protobuf-project/runtime-ts-")
+	res := generateLibrary(t, "config=../../examples/library/codemode.yaml,runtime_prefix=@the-protobuf-project/")
 	seen := map[string]bool{}
 	for _, f := range res.GetFile() {
 		seen[f.GetName()] = true

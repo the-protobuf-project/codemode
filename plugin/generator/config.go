@@ -87,7 +87,7 @@ func (c *Config) defaults() error {
 		return fmt.Errorf("codemode.yaml: %q is not one of %v", *v, allowed)
 	}
 	if c.RuntimePrefix == "" {
-		c.RuntimePrefix = "@the-protobuf-project/runtime-ts-"
+		c.RuntimePrefix = "@the-protobuf-project/"
 	}
 	for _, d := range []string{c.Executor.Timeout, c.Runtime.PausedTTL} {
 		if _, err := Millis(d); err != nil {

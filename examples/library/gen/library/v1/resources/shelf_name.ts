@@ -7,7 +7,7 @@
 //
 // codemode — https://github.com/the-protobuf-project/codemode
 
-import { type ResourceName, resourceName } from "@the-protobuf-project/runtime-ts-protobuf";
+import { type ResourceName, resourceName } from "@the-protobuf-project/protobuf";
 
 /** Resource name of `library.example.com/Shelf`: `shelves/{shelf}`. */
 export type ShelfName = `shelves/${string}`;

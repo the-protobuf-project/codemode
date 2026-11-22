@@ -7,13 +7,13 @@
 
 import { DatabaseSync } from "node:sqlite";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { createCodemode, SqliteStore, type SqliteDatabase } from "@the-protobuf-project/runtime-ts-codemode";
-import { createMcpServer } from "@the-protobuf-project/runtime-ts-codemode/mcp";
-import { QuickJSExecutor } from "@the-protobuf-project/runtime-ts-codemode/quickjs";
+import { createCodemode, type SqliteDatabase, SqliteStore } from "@the-protobuf-project/codemode";
+import { createMcpServer } from "@the-protobuf-project/codemode/mcp";
+import { QuickJSExecutor } from "@the-protobuf-project/codemode/quickjs";
 import { catalog, config, connectors } from "../gen/index.ts";
 import { InMemoryLibrary } from "./library.ts";
 
-const db = new DatabaseSync(process.env["CODEMODE_DB"] ?? ":memory:") as unknown as SqliteDatabase;
+const db = new DatabaseSync(process.env.CODEMODE_DB ?? ":memory:") as unknown as SqliteDatabase;
 const runtime = createCodemode({
   catalog,
   config,

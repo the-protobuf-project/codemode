@@ -59,9 +59,10 @@ jobs:
         with:
           deno-version: v2.x
       - run: bun install
-      - name: Type-check and test on Bun
+      - name: Lint, type-check and test on Bun
         if: matrix.runtime == 'bun'
         run: |
+          bun run lint
           bun run typecheck
           bun run test
       - name: Test on Node

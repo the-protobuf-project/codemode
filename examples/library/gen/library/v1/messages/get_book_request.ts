@@ -14,7 +14,7 @@ import {
   type ToJsonOptions,
   WireType,
   protojson,
-} from "@the-protobuf-project/runtime-ts-protobuf";
+} from "@the-protobuf-project/protobuf";
 import type { BookName } from "../resources/book_name.ts";
 
 /** Request for GetBook. */

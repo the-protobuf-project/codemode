@@ -15,6 +15,7 @@ func writeElem(f *tsFile, fd *Field, no int, v string) string {
 		f.runtime("binary")
 		return fmt.Sprintf("binary.message(w, %d, %s, %s)", no, codecOf(f, fd), v)
 	}
+	f.runtime("WireType")
 	s := scalars[fd.Desc.Kind()]
 	return fmt.Sprintf("w.tag(%d, WireType.%s).%s(%s)", no, s.WireType, s.Method, binaryIn(f, fd, v))
 }
@@ -68,13 +69,13 @@ func emitEncode(f *tsFile, m *Message) {
 		f.P("  },")
 		return
 	}
-	f.runtime("WireType")
 	f.P("  encode(m: ", m.Name, ", w: BinaryWriter = new BinaryWriter()): BinaryWriter {")
 	for _, fd := range m.Fields {
 		no := int(fd.Desc.Number())
 		a := access(fd)
 		switch {
 		case fd.MapKey != nil:
+			f.runtime("WireType")
 			f.P("    for (const [k, v] of Object.entries(", a, " ?? {})) {")
 			f.P("      w.tag(", no, ", WireType.LengthDelimited).fork();")
 			f.P("      ", writeElem(f, fd.MapKey, 1, mapKeyIn(fd.MapKey)), ";")
@@ -83,6 +84,7 @@ func emitEncode(f *tsFile, m *Message) {
 			f.P("    }")
 		case fd.Desc.IsList() && fd.Desc.IsPacked() && isScalar(fd):
 			s := scalars[fd.Desc.Kind()]
+			f.runtime("WireType")
 			f.P("    if (", a, "?.length) {")
 			f.P("      w.tag(", no, ", WireType.LengthDelimited).fork();")
 			f.P("      for (const v of ", a, ") w.", s.Method, "(", binaryIn(f, fd, "v"), ");")

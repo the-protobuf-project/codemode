@@ -7,7 +7,7 @@
 //
 // codemode — https://github.com/the-protobuf-project/codemode
 
-import type { Connector, ConnectorOptions } from "@the-protobuf-project/runtime-ts-codemode";
+import type { Connector, ConnectorOptions } from "@the-protobuf-project/codemode";
 import { libraryServiceConnector } from "../library/v1/services/library_service/connector.ts";
 import type { LibraryService } from "../library/v1/services/library_service/service.ts";
 

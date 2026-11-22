@@ -7,9 +7,14 @@
     "examples/*"
   ],
   "scripts": {
+    "lint": "biome ci .",
+    "format": "biome check --write .",
     "typecheck": "bun run --filter '*' typecheck",
     "test": "bun run --filter '*' test",
     "test:node": "bun run --filter '*' test:node",
     "test:deno": "bun run --filter '*' test:deno"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.6.8"
   }
 }

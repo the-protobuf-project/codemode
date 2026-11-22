@@ -31,10 +31,11 @@ generate: build
     rm -rf examples/library/gen
     buf generate --template examples/library/buf.gen.yaml
 
-# Lint protos, Go and the 200-line limit
+# Lint protos, Go, TypeScript (Biome) and the 200-line limit
 lint:
     buf lint
     go vet ./...
+    bun run lint
     ./scripts/check-lines.sh
 
 # Run Go tests, then type-check and test the example on Bun

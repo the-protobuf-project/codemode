@@ -92,7 +92,9 @@ func emitToJSON(f *tsFile, m *Message) {
 		return
 	}
 	f.P("  toJson(m: ", m.Name, ", options?: ToJsonOptions): JsonObject {")
-	f.P("    const all = options?.emitDefaults === true;")
+	if usesDefaults(m) {
+		f.P("    const all = options?.emitDefaults === true;")
+	}
 	f.P("    const o: JsonObject = {};")
 	for _, fd := range m.Fields {
 		a := access(fd)
@@ -122,4 +124,15 @@ func emitToJSON(f *tsFile, m *Message) {
 	}
 	f.P("    return o;")
 	f.P("  },")
+}
+
+// usesDefaults reports whether toJson writes a field that emitDefaults affects:
+// a map, a list, or a scalar without presence.
+func usesDefaults(m *Message) bool {
+	for _, fd := range m.Fields {
+		if fd.MapKey != nil || fd.Desc.IsList() || (!fd.Explicit && isScalar(fd)) {
+			return true
+		}
+	}
+	return false
 }

@@ -3,7 +3,7 @@
 
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { fromBinary, toBinary } from "@the-protobuf-project/runtime-ts-protobuf";
+import { fromBinary, toBinary } from "@the-protobuf-project/protobuf";
 import { libraryV1 } from "../gen/index.ts";
 
 const { BookCodec, CreateBookRequestCodec, ListBooksRequestCodec, BookName, ShelfName, GenreCodec } = libraryV1;
@@ -55,7 +55,10 @@ test("a REQUIRED message field must be present", () => {
 });
 
 test("the oneof keeps only the last member on decode", () => {
-  const bytes = new Uint8Array([...toBinary(BookCodec, { title: "T", isbn: "1" }), ...toBinary(BookCodec, { title: "T", doi: "2" })]);
+  const bytes = new Uint8Array([
+    ...toBinary(BookCodec, { title: "T", isbn: "1" }),
+    ...toBinary(BookCodec, { title: "T", doi: "2" }),
+  ]);
   const decoded = fromBinary(BookCodec, bytes);
   assert.equal(decoded.doi, "2");
   assert.equal(decoded.isbn, undefined);

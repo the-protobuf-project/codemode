@@ -4,12 +4,12 @@ provides: codemode
 # Annotations read. None are required: a service with mcp.v1 options, or
 # none at all, still generates.
 annotations:
-  - codemode.v1.service, codemode.v1.method              # namespace, approval, replay, revert, snippets
-  - mcp.v1.tool, mcp.v1.elicitation, mcp.v1.service      # hints, approval prompts, instructions
-  - mcp.v1.field, mcp.v1.enum, mcp.v1.enum_value         # descriptions
-  - google.api.resource, google.api.resource_reference   # typed resource names
-  - google.api.field_behavior, buf.validate.field        # required and output-only fields
-  - google.api.http                                      # HTTP transcoding in the generated client
+  - codemode.v1.service, codemode.v1.method # namespace, approval, replay, revert, snippets
+  - mcp.v1.tool, mcp.v1.elicitation, mcp.v1.service # hints, approval prompts, instructions
+  - mcp.v1.field, mcp.v1.enum, mcp.v1.enum_value # descriptions
+  - google.api.resource, google.api.resource_reference # typed resource names
+  - google.api.field_behavior, buf.validate.field # required and output-only fields
+  - google.api.http # HTTP transcoding in the generated client
 
 # Run once over the whole API: search and the sandbox span every service.
 strategy: all
