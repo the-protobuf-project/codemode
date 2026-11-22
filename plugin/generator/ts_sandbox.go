@@ -38,6 +38,7 @@ func newSandboxMethod(m *Method) sandboxMethod {
 	if m.Revert != nil {
 		notes = append(notes, "Undone on rollback by "+m.Service.Namespace+"."+m.Revert.Method.Name+".")
 	}
+	notes = append(notes, deprecated(isDeprecated(m.Proto.Desc))...)
 	return sandboxMethod{jsdoc("  ", m.Doc, notes...), m.Name, refType(m.Input, n), refType(m.Output, n)}
 }
 
@@ -53,7 +54,7 @@ type sandboxNamespace struct {
 }
 
 func newSandboxNamespace(s *Service) sandboxNamespace {
-	v := sandboxNamespace{Doc: jsdoc("", s.Instructions), Name: s.Namespace}
+	v := sandboxNamespace{Doc: jsdoc("", joinDocs(s.Doc, s.Instructions), deprecated(isDeprecated(s.Proto.Desc))...), Name: s.Namespace}
 	for _, m := range s.Methods {
 		v.Methods = append(v.Methods, newSandboxMethod(m))
 	}

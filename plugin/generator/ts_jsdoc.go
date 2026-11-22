@@ -37,6 +37,14 @@ func jsdoc(indent, text string, notes ...string) string {
 	return b.String()
 }
 
+// deprecated is the JSDoc tag for a deprecated declaration, as a note.
+func deprecated(d bool) []string {
+	if d {
+		return []string{"@deprecated"}
+	}
+	return nil
+}
+
 // tsString quotes s as a TypeScript string literal.
 func tsString(s string) string {
 	r := strings.NewReplacer(`\`, `\\`, `"`, `\"`, "\n", `\n`, "\r", `\r`, "\t", `\t`, " ", ` `, " ", ` `)

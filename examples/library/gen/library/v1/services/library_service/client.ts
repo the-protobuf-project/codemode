@@ -61,7 +61,11 @@ export class LibraryServiceClient implements LibraryService {
     return this.transport.unary(LibraryServiceDescriptor.methods.listBooks, request, options);
   }
 
-  /** Gets a book. */
+  /**
+   * Gets a book.
+   *
+   * The result includes the borrower and due time of a lent book.
+   */
   getBook(request: GetBookRequest, options?: CallOptions): Promise<Book> {
     return this.transport.unary(LibraryServiceDescriptor.methods.getBook, request, options);
   }

@@ -7,6 +7,12 @@
 //
 // codemode — https://github.com/the-protobuf-project/codemode
 
+/**
+ * The library API: shelves, the books on them, and lending books out.
+ *
+ * @packageDocumentation
+ */
+
 import { registerTypes } from "@the-protobuf-project/protobuf";
 import { ArchiveShelfRequestCodec } from "./messages/archive_shelf_request.ts";
 import { ArchiveShelfResponseCodec } from "./messages/archive_shelf_response.ts";

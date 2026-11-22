@@ -14,6 +14,9 @@ import (
 func (cat *Catalog) emitPackageIndex(gen *protogen.Plugin, p *Package) {
 	f := cat.newFile(p.Dir+"/index", "")
 	f.notes = []string{"package: " + string(p.Name)}
+	if p.Doc != "" {
+		f.module = jsdoc("", p.Doc, "@packageDocumentation") + "\n"
+	}
 	var files []string
 	for _, m := range p.Messages {
 		files = append(files, m.Path)

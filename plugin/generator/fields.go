@@ -73,7 +73,7 @@ func (cat *Catalog) buildFields(msg *Message, m *protogen.Message) {
 		if od := fd.ContainingOneof(); od != nil && !od.IsSynthetic() {
 			o := oneofs[od.FullName()]
 			if o == nil {
-				o = &Oneof{Name: string(od.Name())}
+				o = &Oneof{Name: string(od.Name()), Doc: oneofDoc(m, od)}
 				oneofs[od.FullName()] = o
 				msg.Oneofs = append(msg.Oneofs, o)
 			}
@@ -82,6 +82,16 @@ func (cat *Catalog) buildFields(msg *Message, m *protogen.Message) {
 		}
 		msg.Fields = append(msg.Fields, field)
 	}
+}
+
+// oneofDoc is the comment on a oneof declaration.
+func oneofDoc(m *protogen.Message, od protoreflect.OneofDescriptor) string {
+	for _, o := range m.Oneofs {
+		if o.Desc == od {
+			return comment(o.Comments)
+		}
+	}
+	return ""
 }
 
 // field resolves the type of one field; map entries resolve key and value.

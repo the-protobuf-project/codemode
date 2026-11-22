@@ -35,12 +35,12 @@ type viewParts struct {
 func newServiceView(f *tsFile, s *Service, parts viewParts) serviceView {
 	n := moduleNamer{f}
 	v := serviceView{
-		Doc: jsdoc("", s.Doc), Name: s.Name, TypeName: string(s.Proto.Desc.FullName()),
+		Doc: jsdoc("", s.Doc, deprecated(isDeprecated(s.Proto.Desc))...), Name: s.Name, TypeName: string(s.Proto.Desc.FullName()),
 		Namespace: s.Namespace, Instructions: s.Instructions, Func: s.connectorFunc(),
 	}
 	for _, m := range s.Methods {
 		mv := methodView{
-			Doc: jsdoc("  ", m.Doc), Name: m.Name, Client: m.Client(), RPC: string(m.Proto.Desc.Name()),
+			Doc: jsdoc("  ", m.Doc, deprecated(isDeprecated(m.Proto.Desc))...), Name: m.Name, Client: m.Client(), RPC: string(m.Proto.Desc.Name()),
 			Idempotency: methodIdempotency(m.Proto.Desc),
 			Approval:    m.Approval, Replay: m.Replay, ApprovalMsg: m.ApprovalMsg,
 		}

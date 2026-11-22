@@ -44,28 +44,19 @@ func isRequired(fd protoreflect.FieldDescriptor, ir *service.Field) bool {
 	return rules.GetRequired()
 }
 
-// fieldDoc is a field's mcp.v1 description, falling back to its comment.
+// fieldDoc is a field's mcp.v1 comment, then its mcp.v1 description.
 func fieldDoc(fd protoreflect.FieldDescriptor, comment string) string {
-	if o := ext[*mcppb.McpFieldOptions](fd.Options(), mcppb.E_Field); o.GetDescription() != "" {
-		return o.GetDescription()
-	}
-	return comment
+	return joinDocs(comment, ext[*mcppb.McpFieldOptions](fd.Options(), mcppb.E_Field).GetDescription())
 }
 
-// enumDoc is an enum's mcp.v1 description, falling back to its comment.
+// enumDoc is an enum's mcp.v1 comment, then its mcp.v1 description.
 func enumDoc(ed protoreflect.EnumDescriptor, comment string) string {
-	if o := ext[*mcppb.McpEnumOptions](ed.Options(), mcppb.E_Enum); o.GetDescription() != "" {
-		return o.GetDescription()
-	}
-	return comment
+	return joinDocs(comment, ext[*mcppb.McpEnumOptions](ed.Options(), mcppb.E_Enum).GetDescription())
 }
 
-// enumValueDoc is an enum value's mcp.v1 description, falling back to its comment.
+// enumValueDoc is an enum value's mcp.v1 comment, then its mcp.v1 description.
 func enumValueDoc(vd protoreflect.EnumValueDescriptor, comment string) string {
-	if o := ext[*mcppb.McpEnumValueOptions](vd.Options(), mcppb.E_EnumValue); o.GetDescription() != "" {
-		return o.GetDescription()
-	}
-	return comment
+	return joinDocs(comment, ext[*mcppb.McpEnumValueOptions](vd.Options(), mcppb.E_EnumValue).GetDescription())
 }
 
 // fileResources returns a file's google.api.resource_definition entries.

@@ -54,10 +54,11 @@ func interfaceDecl(m *Message, n typeNamer, export string) string {
 }
 
 func messageNotes(m *Message) []string {
-	if m.Resource == nil {
-		return nil
+	var notes []string
+	if m.Resource != nil {
+		notes = append(notes, "Resource `"+m.Resource.Type+"`, named `"+m.Resource.Pattern+"`.")
 	}
-	return []string{"Resource `" + m.Resource.Type + "`, named `" + m.Resource.Pattern + "`."}
+	return append(notes, deprecated(isDeprecated(m.Desc))...)
 }
 
 // emitMessage writes messages/<name>.ts: the interface and its codec.
