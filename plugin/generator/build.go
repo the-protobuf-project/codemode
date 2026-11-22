@@ -13,7 +13,12 @@ import (
 
 // Build turns the files protoc asked for into the Code Mode catalog.
 func Build(gen *protogen.Plugin, cfg *Config) (*Catalog, error) {
+	a, err := buildAIP(gen)
+	if err != nil {
+		return nil, err
+	}
 	cat := &Catalog{
+		aip:        a,
 		Config:     cfg,
 		Version:    protocVersion(gen),
 		byMessage:  map[protoreflect.FullName]*Message{},
@@ -41,7 +46,6 @@ func Build(gen *protogen.Plugin, cfg *Config) (*Catalog, error) {
 	for _, m := range msgs {
 		cat.addMessage(m)
 	}
-	cat.indexResources(ix)
 	for _, m := range msgs {
 		cat.buildFields(cat.byMessage[m.Desc.FullName()], m)
 	}

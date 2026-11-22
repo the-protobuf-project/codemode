@@ -97,7 +97,7 @@ func (cat *Catalog) method(svc *Service, m *protogen.Method) (*Method, error) {
 	meth := &Method{
 		Proto: m, Service: svc, Name: name, Path: svc.Namespace + "." + name,
 		Doc:   firstNonEmpty(tool.GetDescription(), comment(m.Comments)),
-		Input: in, Output: out, HTTP: httpRule(m.Desc), Examples: opts.GetExamples(),
+		Input: in, Output: out, HTTP: cat.aip.httpRule(m.Desc), Examples: opts.GetExamples(),
 		ApprovalMsg: elicit.GetMessage(),
 	}
 	level := methodIdempotency(m.Desc)
