@@ -1,0 +1,22 @@
+{
+  "name": "@codemode-examples/library",
+  "private": true,
+  "type": "module",
+  "description": "LibraryService exposed through Code Mode: generated code, an in-memory server, and end-to-end tests.",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "demo": "node --conditions=source src/demo.ts",
+    "mcp": "node --conditions=source src/mcp.ts",
+    "test": "node --conditions=source --test test/*.test.ts",
+    "test:bun": "bun test ./test",
+    "test:deno": "deno test --no-check --allow-read --allow-env --allow-run --conditions=source test/"
+  },
+  "dependencies": {
+    "@the-protobuf-project/codemode": "*"
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.2",
+    "@types/node": "^26.6.6",
+    "typescript": "^7.0.2"
+  }
+}

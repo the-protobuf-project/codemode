@@ -1,0 +1,49 @@
+// Copyright 2026 The Protobuf Project authors.
+// SPDX-License-Identifier: Apache-2.0
+
+syntax = "proto3";
+
+package library.v1;
+
+import "google/api/field_behavior.proto";
+import "google/api/resource.proto";
+import "google/protobuf/timestamp.proto";
+
+// A shelf groups books by genre.
+message Shelf {
+  option (google.api.resource) = {
+    type: "library.example.com/Shelf"
+    pattern: "shelves/{shelf}"
+    singular: "shelf"
+    plural: "shelves"
+  };
+
+  // The shelf's resource name.
+  string name = 1 [(google.api.field_behavior) = IDENTIFIER];
+
+  // What the shelf is called, e.g. "Poetry".
+  string display_name = 2 [(google.api.field_behavior) = REQUIRED];
+
+  // The kind of books on the shelf.
+  Genre genre = 3;
+
+  // How many books the shelf holds.
+  int32 book_count = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
+
+  // When the shelf was created.
+  google.protobuf.Timestamp create_time = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
+}
+
+// The kind of books on a shelf.
+enum Genre {
+  // Not set.
+  GENRE_UNSPECIFIED = 0;
+  // Novels and short stories.
+  GENRE_FICTION = 1;
+  // Biography, history and science.
+  GENRE_NON_FICTION = 2;
+  // Poems and verse.
+  GENRE_POETRY = 3;
+  // Books for children.
+  GENRE_CHILDREN = 4;
+}

@@ -1,0 +1,21 @@
+# yaml-language-server: $schema=../../schema/codemode.schema.json
+# How the library example exposes LibraryService to Code Mode.
+version: v1
+include: ["library.v1.*"]
+naming: lowerCamel
+approval:
+  destructive: require
+  elicitation: require
+  infer_from_aip: true
+discovery: progressive
+executor:
+  timeout: 30s
+  memory_mb: 64
+  outbound: none
+runtime:
+  max_executions: 50
+  paused_ttl: 24h
+  max_value_bytes: 1000000
+  result_budget_tokens: 6000
+mcp:
+  expose: code

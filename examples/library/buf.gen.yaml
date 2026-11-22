@@ -1,0 +1,14 @@
+# Generates the library example's Code Mode codebase into gen/.
+#
+# Run from the repository root, where buf.yaml spans the codemode schema and
+# this example:  buf generate --template examples/library/buf.gen.yaml
+version: v2
+inputs:
+  - directory: examples/library/protobuf
+plugins:
+  - local: bin/protoc-gen-codemode
+    out: examples/library/gen
+    strategy: all
+    opt:
+      - config=examples/library/codemode.yaml
+      - runtime_module=@the-protobuf-project/codemode
