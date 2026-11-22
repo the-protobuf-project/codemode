@@ -73,26 +73,26 @@ func newServiceView(f *tsFile, s *Service, parts viewParts) serviceView {
 func (cat *Catalog) emitService(gen *protogen.Plugin, s *Service) {
 	ext := cat.Config.Extension()
 
-	f := cat.newFile(s.Dir+"/service.ts", s.Source)
+	f := cat.newFile(s.Dir+"/service", s.Source)
 	f.runtimeType("CallOptions", "MethodDescriptor")
 	f.render("service.ts.tpl", newServiceView(f, s, viewParts{types: true, codecs: true}))
 	f.emit(gen)
 
-	c := cat.newFile(s.Dir+"/client.ts", s.Source)
+	c := cat.newFile(s.Dir+"/client", s.Source)
 	c.runtimeType("CallOptions", "Transport")
-	c.local(s.Dir+"/service.ts", s.Name+"Descriptor")
-	c.localType(s.Dir+"/service.ts", s.Name)
+	c.local(s.Dir+"/service", s.Name+"Descriptor")
+	c.localType(s.Dir+"/service", s.Name)
 	c.render("client.ts.tpl", newServiceView(c, s, viewParts{types: true}))
 	c.emit(gen)
 
-	k := cat.newFile(s.Dir+"/connector.ts", s.Source)
+	k := cat.newFile(s.Dir+"/connector", s.Source)
 	k.runtime("connector", "unaryMethod")
 	k.runtimeType("Connector", "ConnectorOptions")
-	k.localType(s.Dir+"/service.ts", s.Name)
+	k.localType(s.Dir+"/service", s.Name)
 	k.render("connector.ts.tpl", newServiceView(k, s, viewParts{codecs: true, reverts: true}))
 	k.emit(gen)
 
-	i := cat.newFile(s.Dir+"/index.ts", s.Source)
+	i := cat.newFile(s.Dir+"/index", s.Source)
 	i.render("service_index.ts.tpl", struct{ Service, Client, Connector string }{
 		"./service" + ext, "./client" + ext, "./connector" + ext,
 	})
@@ -101,11 +101,11 @@ func (cat *Catalog) emitService(gen *protogen.Plugin, s *Service) {
 
 // refCodec imports and returns the codec of an RPC input or output.
 func refCodec(f *tsFile, t TypeRef) string {
-	if t.WKT != nil {
-		f.runtime(t.WKT.Codec)
-		return t.WKT.Codec
+	if t.WKT != "" {
+		f.runtime(tsWKT(t.WKT).Codec)
+		return tsWKT(t.WKT).Codec
 	}
-	f.local(t.Message.File, t.Message.Codec())
+	f.local(t.Message.Path, t.Message.Codec())
 	return t.Message.Codec()
 }
 

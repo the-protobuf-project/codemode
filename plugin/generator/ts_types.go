@@ -15,28 +15,29 @@ type typeNamer interface {
 	message(m *Message) string
 	enum(e *Enum) string
 	resource(r *Resource) string
-	wellKnown(w *WellKnown) string
+	wellKnown(name protoreflect.FullName) string
 }
 
 // moduleNamer names types inside a generated file, importing as it goes.
 type moduleNamer struct{ f *tsFile }
 
 func (n moduleNamer) message(m *Message) string {
-	n.f.localType(m.File, m.Name)
+	n.f.localType(m.Path, m.Name)
 	return m.Name
 }
 
 func (n moduleNamer) enum(e *Enum) string {
-	n.f.localType(e.File, e.Name)
+	n.f.localType(e.Path, e.Name)
 	return e.Name
 }
 
 func (n moduleNamer) resource(r *Resource) string {
-	n.f.localType(r.File, r.Name)
+	n.f.localType(r.Path, r.Name)
 	return r.Name
 }
 
-func (n moduleNamer) wellKnown(w *WellKnown) string {
+func (n moduleNamer) wellKnown(name protoreflect.FullName) string {
+	w := tsWKT(name)
 	n.f.runtimeType(w.Imports...)
 	return w.Type
 }
@@ -44,10 +45,10 @@ func (n moduleNamer) wellKnown(w *WellKnown) string {
 // sandboxNamer names types in sandbox.d.ts, where everything is global.
 type sandboxNamer struct{}
 
-func (sandboxNamer) message(m *Message) string     { return m.Sandbox }
-func (sandboxNamer) enum(e *Enum) string           { return e.Sandbox }
-func (sandboxNamer) resource(r *Resource) string   { return r.Sandbox }
-func (sandboxNamer) wellKnown(w *WellKnown) string { return w.Type }
+func (sandboxNamer) message(m *Message) string                   { return m.Sandbox }
+func (sandboxNamer) enum(e *Enum) string                         { return e.Sandbox }
+func (sandboxNamer) resource(r *Resource) string                 { return r.Sandbox }
+func (sandboxNamer) wellKnown(name protoreflect.FullName) string { return tsWKT(name).Type }
 
 // tsType is a field's TypeScript type.
 func tsType(f *Field, n typeNamer) string {
@@ -73,7 +74,7 @@ func elemType(f *Field, n typeNamer) string {
 		return n.enum(f.Enum)
 	case f.Message != nil:
 		return n.message(f.Message)
-	case f.WKT != nil:
+	case f.WKT != "":
 		return n.wellKnown(f.WKT)
 	}
 	return scalars[f.Desc.Kind()].TS
@@ -81,7 +82,7 @@ func elemType(f *Field, n typeNamer) string {
 
 // refType is the TypeScript type of an RPC input or output.
 func refType(t TypeRef, n typeNamer) string {
-	if t.WKT != nil {
+	if t.WKT != "" {
 		return n.wellKnown(t.WKT)
 	}
 	return n.message(t.Message)
@@ -89,7 +90,7 @@ func refType(t TypeRef, n typeNamer) string {
 
 // isScalar reports a field whose elements are strings, numbers or booleans.
 func isScalar(f *Field) bool {
-	return f.Message == nil && f.WKT == nil && f.Desc.Kind() != protoreflect.GroupKind
+	return f.Message == nil && f.WKT == "" && f.Desc.Kind() != protoreflect.GroupKind
 }
 
 // zero is the default value of a scalar or enum element.
@@ -97,7 +98,7 @@ func zero(file *tsFile, f *Field, n typeNamer) string {
 	switch {
 	case f.Enum != nil:
 		if file != nil {
-			file.local(f.Enum.File, f.Enum.Codec())
+			file.local(f.Enum.Path, f.Enum.Codec())
 		}
 		return f.Enum.Codec() + ".defaultValue"
 	case f.Resource != nil:
@@ -110,8 +111,8 @@ func zero(file *tsFile, f *Field, n typeNamer) string {
 // derived from annotations.
 func fieldNotes(f *Field) []string {
 	var notes []string
-	if f.Desc.Kind() == protoreflect.MessageKind && f.WKT != nil && f.WKT.Doc != "" {
-		notes = append(notes, f.WKT.Doc)
+	if f.Desc.Kind() == protoreflect.MessageKind && f.WKT != "" && tsWKT(f.WKT).Doc != "" {
+		notes = append(notes, tsWKT(f.WKT).Doc)
 	}
 	if is64Bit(f.Desc.Kind()) {
 		notes = append(notes, "64-bit integer as a decimal string.")

@@ -10,5 +10,5 @@ import "embed"
 
 // FS holds the templates, addressed by file name.
 //
-//go:embed *.tpl
+//go:embed typescript/*.tpl
 var FS embed.FS

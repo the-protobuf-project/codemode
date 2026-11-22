@@ -38,7 +38,7 @@ type Message struct {
 	Package  *Package
 	Name     string // TypeScript name: "Book", nested "BookEdition"
 	Sandbox  string // unique name in sandbox.d.ts
-	File     string // "library/v1/messages/book.ts"
+	Path     string // output path without extension: "library/v1/messages/book"
 	Source   string // the .proto it came from
 	Doc      string
 	Fields   []*Field
@@ -61,9 +61,9 @@ type Field struct {
 	Oneof      *Oneof
 	Message    *Message // message-typed fields, except well-known types
 	Enum       *Enum
-	WKT        *WellKnown
-	Resource   *Resource // string fields that hold a resource name
-	MapKey     *Field    // map fields: the entry's key and value
+	WKT        protoreflect.FullName // well-known type, e.g. google.protobuf.Timestamp
+	Resource   *Resource             // string fields that hold a resource name
+	MapKey     *Field                // map fields: the entry's key and value
 	MapValue   *Field
 }
 
@@ -79,7 +79,7 @@ type Enum struct {
 	Package *Package
 	Name    string
 	Sandbox string
-	File    string
+	Path    string // output path without extension
 	Source  string
 	Doc     string
 	Values  []EnumValue
@@ -102,7 +102,7 @@ type Resource struct {
 	Package  *Package
 	Name     string // "BookName"
 	Sandbox  string
-	File     string
+	Path     string // output path without extension
 	Vars     []string
 	Template string // "shelves/${string}/books/${string}"
 }
@@ -142,7 +142,7 @@ type Method struct {
 // TypeRef is a message type used as an RPC input or output.
 type TypeRef struct {
 	Message *Message
-	WKT     *WellKnown
+	WKT     protoreflect.FullName // well-known type, e.g. google.protobuf.Empty
 }
 
 // Revert is a compensating call, resolved against the service's methods.

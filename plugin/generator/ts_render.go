@@ -21,7 +21,7 @@ var funcs = template.FuncMap{
 // tpls holds every template, parsed once. protokit's templates.MustParse is
 // not used because it takes no FuncMap, and text/template rejects a reference
 // to an unknown function at parse time.
-var tpls = template.Must(template.New("codemode").Funcs(funcs).ParseFS(templates.FS, "*.tpl"))
+var tpls = template.Must(template.New("typescript").Funcs(funcs).ParseFS(templates.FS, "typescript/*.tpl"))
 
 // renderString executes the named template and returns its output. A failure
 // is a bug in a template or view, so it panics rather than emitting a partial

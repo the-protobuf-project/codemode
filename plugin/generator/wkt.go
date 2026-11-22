@@ -5,37 +5,18 @@ package generator
 
 import "google.golang.org/protobuf/reflect/protoreflect"
 
-// WellKnown is a google.protobuf type the runtime ships a codec for. Its
-// TypeScript shape is its protojson form, so the model, the sandbox and the
-// client all see the same value.
-type WellKnown struct {
-	Type    string // TypeScript type, e.g. "string"
-	Codec   string // runtime export, e.g. "TimestampCodec"
-	Imports []string
-	Doc     string
+// wellKnownTypes are the google.protobuf messages every language's runtime
+// ships natively, so they are referenced by name and never generated.
+var wellKnownTypes = map[protoreflect.FullName]bool{
+	"google.protobuf.Timestamp": true, "google.protobuf.Duration": true, "google.protobuf.FieldMask": true,
+	"google.protobuf.Struct": true, "google.protobuf.Value": true, "google.protobuf.ListValue": true,
+	"google.protobuf.Empty": true, "google.protobuf.Any": true,
+	"google.protobuf.DoubleValue": true, "google.protobuf.FloatValue": true, "google.protobuf.Int64Value": true,
+	"google.protobuf.UInt64Value": true, "google.protobuf.Int32Value": true, "google.protobuf.UInt32Value": true,
+	"google.protobuf.BoolValue": true, "google.protobuf.StringValue": true, "google.protobuf.BytesValue": true,
 }
 
-var wellKnown = map[protoreflect.FullName]*WellKnown{
-	"google.protobuf.Timestamp":   {Type: "string", Codec: "TimestampCodec", Doc: "RFC 3339 timestamp, e.g. \"2026-11-22T10:00:00Z\"."},
-	"google.protobuf.Duration":    {Type: "string", Codec: "DurationCodec", Doc: "Duration in seconds with an \"s\" suffix, e.g. \"1.5s\"."},
-	"google.protobuf.FieldMask":   {Type: "string", Codec: "FieldMaskCodec", Doc: "Comma-separated lowerCamel field paths, e.g. \"title,author\"."},
-	"google.protobuf.Struct":      {Type: "JsonObject", Codec: "StructCodec", Imports: []string{"JsonObject"}},
-	"google.protobuf.Value":       {Type: "JsonValue", Codec: "ValueCodec", Imports: []string{"JsonValue"}},
-	"google.protobuf.ListValue":   {Type: "JsonValue[]", Codec: "ListValueCodec", Imports: []string{"JsonValue"}},
-	"google.protobuf.Empty":       {Type: "Empty", Codec: "EmptyCodec", Imports: []string{"Empty"}},
-	"google.protobuf.Any":         {Type: "AnyMessage", Codec: "AnyCodec", Imports: []string{"AnyMessage"}},
-	"google.protobuf.DoubleValue": {Type: "number | null", Codec: "DoubleValueCodec"},
-	"google.protobuf.FloatValue":  {Type: "number | null", Codec: "FloatValueCodec"},
-	"google.protobuf.Int64Value":  {Type: "string | null", Codec: "Int64ValueCodec", Doc: "64-bit integer as a decimal string."},
-	"google.protobuf.UInt64Value": {Type: "string | null", Codec: "UInt64ValueCodec", Doc: "64-bit integer as a decimal string."},
-	"google.protobuf.Int32Value":  {Type: "number | null", Codec: "Int32ValueCodec"},
-	"google.protobuf.UInt32Value": {Type: "number | null", Codec: "UInt32ValueCodec"},
-	"google.protobuf.BoolValue":   {Type: "boolean | null", Codec: "BoolValueCodec"},
-	"google.protobuf.StringValue": {Type: "string | null", Codec: "StringValueCodec"},
-	"google.protobuf.BytesValue":  {Type: "string | null", Codec: "BytesValueCodec", Doc: "Bytes as base64."},
-}
-
-// lookupWellKnown returns the runtime codec for a google.protobuf message.
-func lookupWellKnown(name protoreflect.FullName) *WellKnown {
-	return wellKnown[name]
+// isWellKnown reports whether a message is a runtime-provided well-known type.
+func isWellKnown(name protoreflect.FullName) bool {
+	return wellKnownTypes[name]
 }

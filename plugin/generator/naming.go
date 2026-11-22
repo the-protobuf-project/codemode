@@ -92,7 +92,7 @@ func pascal(s string) string {
 }
 
 // relImport returns the import specifier for target as seen from the file
-// from, both relative to the output root, with ext replacing ".ts".
+// from, both extension-free paths relative to the output root, with ext added.
 func relImport(from, target, ext string) string {
 	rel, err := relPath(path.Dir(from), target)
 	if err != nil {
@@ -101,7 +101,7 @@ func relImport(from, target, ext string) string {
 	if !strings.HasPrefix(rel, ".") {
 		rel = "./" + rel
 	}
-	return strings.TrimSuffix(rel, ".ts") + ext
+	return rel + ext
 }
 
 func relPath(fromDir, target string) (string, error) {

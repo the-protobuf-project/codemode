@@ -16,17 +16,23 @@ import (
 // optional. Generation settings shape the output; runtime settings are written
 // to codemode/config.ts for createCodemode to read.
 type Config struct {
-	Version         string         `yaml:"version"`
-	Include         []string       `yaml:"include"`
-	Exclude         []string       `yaml:"exclude"`
-	Naming          string         `yaml:"naming"`
-	Approval        ApprovalConfig `yaml:"approval"`
-	Discovery       string         `yaml:"discovery"`
-	ImportExtension *string        `yaml:"import_extension"`
-	RuntimePrefix   string         `yaml:"runtime_prefix"`
-	Executor        ExecutorConfig `yaml:"executor"`
-	Runtime         RuntimeConfig  `yaml:"runtime"`
-	MCP             MCPConfig      `yaml:"mcp"`
+	Version    string         `yaml:"version"`
+	Include    []string       `yaml:"include"`
+	Exclude    []string       `yaml:"exclude"`
+	Naming     string         `yaml:"naming"`
+	Approval   ApprovalConfig `yaml:"approval"`
+	Discovery  string         `yaml:"discovery"`
+	TypeScript TSConfig       `yaml:"typescript"`
+	Executor   ExecutorConfig `yaml:"executor"`
+	Runtime    RuntimeConfig  `yaml:"runtime"`
+	MCP        MCPConfig      `yaml:"mcp"`
+}
+
+// TSConfig holds the options of the TypeScript output. Other languages get
+// a section of their own beside it.
+type TSConfig struct {
+	ImportExtension *string `yaml:"import_extension"`
+	RuntimePrefix   string  `yaml:"runtime_prefix"`
 }
 
 // ApprovalConfig decides which methods pause for approval when the proto
@@ -86,8 +92,8 @@ func (c *Config) defaults() error {
 		}
 		return fmt.Errorf("codemode.yaml: %q is not one of %v", *v, allowed)
 	}
-	if c.RuntimePrefix == "" {
-		c.RuntimePrefix = "@the-protobuf-project/"
+	if c.TypeScript.RuntimePrefix == "" {
+		c.TypeScript.RuntimePrefix = "@the-protobuf-project/"
 	}
 	for _, d := range []string{c.Executor.Timeout, c.Runtime.PausedTTL} {
 		if _, err := Millis(d); err != nil {
@@ -114,12 +120,13 @@ func (c *Config) InferFromAIP() bool {
 	return c.Approval.InferFromAIP == nil || *c.Approval.InferFromAIP
 }
 
-// Extension is the suffix written on relative imports between generated files.
+// Extension is the suffix written on relative imports between generated
+// TypeScript files.
 func (c *Config) Extension() string {
-	if c.ImportExtension == nil {
+	if c.TypeScript.ImportExtension == nil {
 		return ".ts"
 	}
-	return *c.ImportExtension
+	return *c.TypeScript.ImportExtension
 }
 
 // Selects reports whether a service's full name passes include and exclude.

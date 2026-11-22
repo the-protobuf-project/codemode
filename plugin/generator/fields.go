@@ -67,7 +67,7 @@ func (cat *Catalog) resource(typ string) *Resource {
 		Pattern:  def.pattern,
 		Package:  p,
 		Name:     name,
-		File:     p.Dir + "/resources/" + fileStem(name) + ".ts",
+		Path:     p.Dir + "/resources/" + fileStem(name),
 		Template: patternVar.ReplaceAllString(def.pattern, "$${string}"),
 	}
 	for _, m := range patternVar.FindAllStringSubmatch(def.pattern, -1) {
@@ -127,8 +127,8 @@ func (cat *Catalog) field(fd protoreflect.FieldDescriptor) *Field {
 	}
 	switch fd.Kind() {
 	case protoreflect.MessageKind, protoreflect.GroupKind:
-		if wk := lookupWellKnown(fd.Message().FullName()); wk != nil {
-			f.WKT = wk
+		if isWellKnown(fd.Message().FullName()) {
+			f.WKT = fd.Message().FullName()
 		} else {
 			f.Message = cat.byMessage[fd.Message().FullName()]
 		}

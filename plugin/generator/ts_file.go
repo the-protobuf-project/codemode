@@ -26,6 +26,7 @@ type tsFile struct {
 	body    strings.Builder
 }
 
+// newFile starts a TypeScript file; path has no extension.
 func (cat *Catalog) newFile(path, source string) *tsFile {
 	return &tsFile{cat: cat, path: path, source: source, imports: map[string]map[string]bool{}}
 }
@@ -58,7 +59,7 @@ func (f *tsFile) runtimeSpec(name string) string {
 	if !ok {
 		mod = "protobuf"
 	}
-	return f.cat.Config.RuntimePrefix + mod
+	return f.cat.Config.TypeScript.RuntimePrefix + mod
 }
 
 // runtime imports values from the runtime package.
@@ -157,7 +158,7 @@ const maxLine = 100
 
 // emit hands the finished file to protoc.
 func (f *tsFile) emit(gen *protogen.Plugin) {
-	g := gen.NewGeneratedFile(f.path, "")
+	g := gen.NewGeneratedFile(f.path+".ts", "")
 	g.P(f.content())
 }
 

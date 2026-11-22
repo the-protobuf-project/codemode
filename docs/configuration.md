@@ -10,6 +10,7 @@ plugins:
     out: gen
     strategy: all                       # one catalog across every service
     opt:
+      - lang=typescript                 # or a comma-separated list, or all; typescript is the only one today
       - config=codemode.yaml            # relative to where buf runs
       - import_extension=.ts            # .ts (Node, Bun, Deno), .js (compiled), none (bundlers)
       - runtime_prefix=@the-protobuf-project/   # code imports <prefix>protobuf, network, codemode
@@ -44,6 +45,9 @@ runtime:
   result_budget_tokens: 6000
 mcp:
   expose: code              # code | search_execute
+typescript:                 # options of lang=typescript; other languages get their own section
+  import_extension: .ts     # .ts (Node, Bun, Deno), .js (compiled), "" (bundlers)
+  runtime_prefix: "@the-protobuf-project/"   # code imports <prefix>protobuf, network, codemode
 ```
 
 ## Choosing discovery
