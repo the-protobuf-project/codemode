@@ -59,3 +59,29 @@ APIs.
 
 `inline` puts every type and method in the description, so the model needs no
 lookups. It suits APIs of up to about 30 methods.
+
+## Overriding annotations
+
+`services` and `methods` set `codemode.v1` options by full name. Use them for
+protos you can't annotate, such as a dependency or another team's published
+module. Fields you set win over the annotation, and anything you leave out
+keeps it.
+
+```yaml
+services:
+  freebusy.allocation.v1.HoldService:
+    namespace: holds
+    instructions: Hold first, then confirm with reservations.createReservation.
+methods:
+  freebusy.allocation.v1.HoldService.CreateHold:
+    revert:                 # rollback releases the hold
+      method: ReleaseHold
+      fields: { name: result.name }
+  freebusy.reservation.v1.ReservationService.CreateReservation:
+    approval: required      # required | none
+  freebusy.webhook.v1.WebhookService.GetDelivery:
+    exclude: true
+```
+
+A name that matches no service or method in the request fails generation, so a
+typo can't silently drop an approval.

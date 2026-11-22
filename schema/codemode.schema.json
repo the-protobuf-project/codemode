@@ -132,6 +132,75 @@
           "description": "Prefix of the runtime-ts package names; generated code imports <prefix>protobuf, <prefix>network and <prefix>codemode."
         }
       }
+    },
+    "services": {
+      "type": "object",
+      "description": "codemode.v1.service options by service full name, for protos you cannot annotate. Set fields win over annotations.",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "namespace": {
+            "type": "string",
+            "description": "Sandbox global the service's methods hang off."
+          },
+          "instructions": {
+            "type": "string",
+            "description": "Guidance shown to the model next to the namespace."
+          },
+          "exclude": {
+            "type": "boolean",
+            "description": "Hide the whole service from the sandbox."
+          }
+        }
+      }
+    },
+    "methods": {
+      "type": "object",
+      "description": "codemode.v1.method options by method full name, e.g. pkg.v1.Service.Method. Set fields win over annotations.",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "exclude": {
+            "type": "boolean",
+            "description": "Hide the method from the sandbox."
+          },
+          "approval": {
+            "enum": ["required", "none"],
+            "description": "Whether a call pauses for a person's approval."
+          },
+          "replay": {
+            "enum": ["log", "reexecute"],
+            "description": "What happens to this call when an execution is replayed."
+          },
+          "revert": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["method"],
+            "properties": {
+              "method": {
+                "type": "string",
+                "description": "Method in the same service that undoes this one."
+              },
+              "fields": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "Request fields of the revert, from args.<path> or result.<path>."
+              }
+            }
+          },
+          "examples": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Example code shown by codemode.describe()."
+          }
+        }
+      }
     }
   }
 }

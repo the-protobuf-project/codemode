@@ -12,6 +12,9 @@ import (
 
 // Build turns the files protoc asked for into the Code Mode catalog.
 func Build(gen *protogen.Plugin, cfg *Config) (*Catalog, error) {
+	if err := cfg.checkOverrides(gen.Files); err != nil {
+		return nil, err
+	}
 	a, err := buildAIP(gen)
 	if err != nil {
 		return nil, err
