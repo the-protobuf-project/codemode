@@ -121,6 +121,9 @@ Every comment in the protos is carried into JSDoc, in the module files and in
   (`@packageDocumentation`);
 - `mcp.v1` descriptions and codemode `instructions`, added after the comment
   rather than replacing it;
+- protoc-gen-mcp tool names in that text, such as
+  `library_service-list_books_v1`, rewritten to the sandbox call
+  `library.listBooks`;
 - `deprecated = true`, as `@deprecated`;
 - AIP-192 references such as `[Book][library.v1.Book]`, as their text;
 - notes derived from annotations: required, output only, resource names,

@@ -61,6 +61,7 @@ func Build(gen *protogen.Plugin, cfg *Config) (*Catalog, error) {
 	for _, p := range cat.Packages {
 		p.Doc = packageDoc(gen.Files, p.Name)
 	}
+	cat.rewriteToolRefs()
 	cat.assignSandboxNames()
 	return cat, nil
 }
