@@ -110,6 +110,22 @@ type reads the same in both. To change the output, edit a template, run
 `just generate`, and commit the regenerated example: the golden test fails until
 they match.
 
+## Parsing
+
+`protogen` reads the request; protokit's service IR
+([`protokit/service`](https://github.com/the-protobuf-project/protokit/tree/main/service))
+reads the AIP vocabulary: `google.api.http` bindings, `google.api.resource`
+patterns, `resource_reference` and `field_behavior`. It also rejects invalid
+HTTP rules and conflicting routes, the same way other protokit plugins do.
+[`aip.go`](../plugin/generator/aip.go) indexes that IR for the model build.
+The generator itself reads only `codemode.v1`, the `mcp.v1` descriptions and
+hints, and `buf.validate` required.
+
+protokit's IR covers messages an RPC reaches and resources declared on
+messages. `aip.go` adds file-level `google.api.resource_definition` entries,
+plus `field_behavior` and `resource_reference` on messages that only a
+snippet uses.
+
 ## Languages
 
 The plugin takes a `lang` option, like `protoc-gen-mcp`: `typescript` (alias

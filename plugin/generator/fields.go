@@ -4,46 +4,12 @@
 package generator
 
 import (
-	"regexp"
 	"strings"
 
-	"google.golang.org/genproto/googleapis/api/annotations"
+	"github.com/the-protobuf-project/protokit/service"
 	"google.golang.org/protobuf/compiler/protogen"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
-
-// resourceDef is a google.api.resource pattern and where it was declared.
-type resourceDef struct {
-	pattern string
-	pkg     protoreflect.FullName
-	typ     string
-}
-
-var patternVar = regexp.MustCompile(`\{([a-z0-9_]+)(=[^}]*)?\}`)
-
-// indexResources records every resource pattern in the request, so a
-// resource_reference in one file can resolve a type declared in another.
-func (cat *Catalog) indexResources(ix *index) {
-	defs := map[string]resourceDef{}
-	add := func(r *annotations.ResourceDescriptor, pkg protoreflect.FullName) {
-		if r.GetType() != "" && len(r.GetPattern()) > 0 {
-			if _, seen := defs[r.GetType()]; !seen {
-				defs[r.GetType()] = resourceDef{pattern: r.GetPattern()[0], pkg: pkg, typ: r.GetType()}
-			}
-		}
-	}
-	for _, f := range ix.files {
-		for _, r := range fileResources(f.Desc) {
-			add(r, f.Desc.Package())
-		}
-	}
-	for _, m := range ix.messages {
-		if r := resourceOf(m.Desc); r != nil {
-			add(r, m.Desc.ParentFile().Package())
-		}
-	}
-	cat.resourceDefs = defs
-}
 
 // resource returns the generated name type for a resource type, creating it
 // the first time a message or field uses it.
@@ -51,50 +17,56 @@ func (cat *Catalog) resource(typ string) *Resource {
 	if r := cat.byResource[typ]; r != nil {
 		return r
 	}
-	def, ok := cat.resourceDefs[typ]
-	if !ok {
+	def := cat.aip.ir.Resources[typ]
+	if def == nil || len(def.Patterns) == 0 {
 		return nil
 	}
-	p := cat.pkg(def.pkg)
+	p := cat.pkg(cat.resourcePackage(def))
 	name := typ[strings.LastIndex(typ, "/")+1:] + "Name"
 	for _, m := range p.Messages {
 		if m.Name == name {
 			name = strings.TrimSuffix(name, "Name") + "ResourceName"
 		}
 	}
+	pattern := def.Patterns[0]
 	r := &Resource{
 		Type:     typ,
-		Pattern:  def.pattern,
+		Pattern:  pattern.Raw,
 		Package:  p,
 		Name:     name,
 		Path:     p.Dir + "/resources/" + fileStem(name),
-		Template: patternVar.ReplaceAllString(def.pattern, "$${string}"),
-	}
-	for _, m := range patternVar.FindAllStringSubmatch(def.pattern, -1) {
-		r.Vars = append(r.Vars, m[1])
+		Template: patternTemplate(pattern),
+		Vars:     pattern.Vars(),
 	}
 	p.Resources = append(p.Resources, r)
 	cat.byResource[typ] = r
 	return r
 }
 
+// resourcePackage is where a resource's name type is generated: beside the
+// message that declares it, or in the file that defines it.
+func (cat *Catalog) resourcePackage(def *service.Resource) protoreflect.FullName {
+	if m := cat.byMessage[protoreflect.FullName(def.Message)]; m != nil {
+		return m.Desc.ParentFile().Package()
+	}
+	return cat.aip.files[def.Type]
+}
+
 // buildFields resolves every field of msg to its TypeScript shape.
 func (cat *Catalog) buildFields(msg *Message, m *protogen.Message) {
 	nameField := ""
-	if r := resourceOf(m.Desc); r != nil {
-		msg.Resource = cat.resource(r.GetType())
-		nameField = r.GetNameField()
-		if nameField == "" {
-			nameField = "name"
-		}
+	if r := cat.aip.messageResource(m.Desc); r != nil {
+		msg.Resource = cat.resource(r.Type)
+		nameField = r.NameField
 	}
 	oneofs := map[protoreflect.FullName]*Oneof{}
 	for _, f := range m.Fields {
 		fd := f.Desc
 		field := cat.field(fd)
 		field.Doc = fieldDoc(fd, comment(f.Comments))
-		field.Required = isRequired(fd)
-		field.OutputOnly = hasBehavior(fd, annotations.FieldBehavior_OUTPUT_ONLY)
+		ir := cat.aip.field(fd)
+		field.Required = isRequired(fd, ir)
+		field.OutputOnly = ir != nil && ir.Has(service.BehaviorOutputOnly)
 		if string(fd.Name()) == nameField && fd.Kind() == protoreflect.StringKind {
 			field.Resource = msg.Resource
 		}
@@ -135,8 +107,8 @@ func (cat *Catalog) field(fd protoreflect.FieldDescriptor) *Field {
 	case protoreflect.EnumKind:
 		f.Enum = cat.byEnum[fd.Enum().FullName()]
 	case protoreflect.StringKind:
-		if t := resourceReference(fd); t != "" && t != "*" {
-			f.Resource = cat.resource(t)
+		if ir := cat.aip.field(fd); ir != nil && ir.RefType != "" && ir.RefType != "*" && !ir.RefChild {
+			f.Resource = cat.resource(ir.RefType)
 		}
 	}
 	return f

@@ -11,15 +11,15 @@ import (
 // Catalog is the Code Mode model: every package with generated types, the
 // services exposed in the sandbox, and the snippets shipped with them.
 type Catalog struct {
-	Packages     []*Package
-	Services     []*Service
-	Snippets     []*Snippet
-	Config       *Config
-	Version      string // protoc version, for file headers
-	byMessage    map[protoreflect.FullName]*Message
-	byEnum       map[protoreflect.FullName]*Enum
-	byResource   map[string]*Resource
-	resourceDefs map[string]resourceDef
+	Packages   []*Package
+	Services   []*Service
+	Snippets   []*Snippet
+	Config     *Config
+	Version    string // protoc version, for file headers
+	byMessage  map[protoreflect.FullName]*Message
+	byEnum     map[protoreflect.FullName]*Enum
+	byResource map[string]*Resource
+	aip        *aip
 }
 
 // Package groups the generated files of one proto package.
