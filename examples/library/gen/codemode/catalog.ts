@@ -496,7 +496,7 @@ declare const library: {
   /**
    * Gets a book.
    *
-   * The result includes the borrower and due time of a lent book.
+   * The result includes the borrower and due time of a lent book. Find names with library.listBooks.
    */
   getBook(input: GetBookRequest): Promise<Book>;
 
@@ -628,14 +628,14 @@ return page.books.map((b) => b.title);`],
       namespace: "library",
       name: "getBook",
       rpc: "library.v1.LibraryService.GetBook",
-      description: "Gets a book.\n\nThe result includes the borrower and due time of a lent book.",
+      description: "Gets a book.\n\nThe result includes the borrower and due time of a lent book. Find names with library.listBooks.",
       requiresApproval: false,
       replay: "reexecute",
       readOnly: true,
       declaration: `  /**
    * Gets a book.
    *
-   * The result includes the borrower and due time of a lent book.
+   * The result includes the borrower and due time of a lent book. Find names with library.listBooks.
    */
   getBook(input: GetBookRequest): Promise<Book>;
 `,

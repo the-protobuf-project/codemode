@@ -83,7 +83,7 @@ export interface LibraryService {
   /**
    * Gets a book.
    *
-   * The result includes the borrower and due time of a lent book.
+   * The result includes the borrower and due time of a lent book. Find names with library.listBooks.
    */
   getBook(request: GetBookRequest, options?: CallOptions): Promise<Book>;
 
