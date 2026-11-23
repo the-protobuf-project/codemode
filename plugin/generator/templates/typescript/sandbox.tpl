@@ -8,6 +8,11 @@ type Empty = Record<string, never>;
 /** google.protobuf.Any: "@type" plus the packed message's fields. */
 interface AnyMessage { "@type": string; [field: string]: unknown }
 
+/** How much of a stream a call reads: limit replies (default 100, at most 1000), timeoutMs (default 10000, at most 60000). */
+interface StreamOptions { limit?: number; timeoutMs?: number }
+/** A streaming call's replies; complete is false when limit or timeoutMs cut the stream short. */
+interface StreamResult<T> { messages: T[]; complete: boolean }
+
 /** A search hit: a method or a saved snippet. */
 interface CodemodeSearchResult {
   path: string;
@@ -35,7 +40,11 @@ declare const codemode: {
   run(name: string, input?: unknown): Promise<unknown>;
 };
 {{end}}
-{{- define "method"}}{{.Doc}}  {{.Name}}(input: {{.Input}}): Promise<{{.Output}}>;
+{{- define "method"}}{{.Doc}}  {{.Name}}(
+{{- if eq .Streaming "server"}}input: {{.Input}}, options?: StreamOptions): Promise<StreamResult<{{.Output}}>>
+{{- else if eq .Streaming "client"}}inputs: {{.Input}}[]): Promise<{{.Output}}>
+{{- else if eq .Streaming "bidi"}}inputs: {{.Input}}[], options?: StreamOptions): Promise<StreamResult<{{.Output}}>>
+{{- else}}input: {{.Input}}): Promise<{{.Output}}>{{end}};
 {{end}}
 {{- define "namespace"}}{{.Doc}}declare const {{.Name}}: {
 {{range $i, $m := .Methods}}{{if $i}}

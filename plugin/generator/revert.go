@@ -17,6 +17,9 @@ func (cat *Catalog) resolveRevert(svc *Service, m *Method, r *codemodepb.Revert)
 	if r == nil {
 		return nil
 	}
+	if m.Streaming != "" {
+		return fmt.Errorf("%s is a streaming method; a revert undoes one unary call", m.Proto.Desc.FullName())
+	}
 	var target *Method
 	for _, other := range svc.Methods {
 		if string(other.Proto.Desc.Name()) == r.GetMethod() {
@@ -25,6 +28,9 @@ func (cat *Catalog) resolveRevert(svc *Service, m *Method, r *codemodepb.Revert)
 	}
 	if target == nil {
 		return fmt.Errorf("revert method %q is not a unary method of %s", r.GetMethod(), svc.Name)
+	}
+	if target.Streaming != "" {
+		return fmt.Errorf("revert method %s is a streaming method", r.GetMethod())
 	}
 	if target.Approval {
 		return fmt.Errorf("revert method %s requires approval; rollback cannot pause", r.GetMethod())

@@ -23,6 +23,7 @@ export const catalog: Catalog = {
       replay: {{str .Replay}},
       readOnly: {{.ReadOnly}},
 {{if .RevertedBy}}      revertedBy: {{str .RevertedBy}},
+{{end}}{{if .Streaming}}      streaming: {{str .Streaming}},
 {{end}}      declaration: {{tpl .Decl}},
       types: [{{.Types}}],
       examples: [{{.Examples}}],

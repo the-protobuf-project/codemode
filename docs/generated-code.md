@@ -87,6 +87,28 @@ const binding = new LibraryServiceClient(connectTransport({ baseUrl: "https://in
 implementation over Connect as a fetch handler: `Bun.serve`, `Deno.serve`, a
 Worker, or a test.
 
+## Streaming RPCs
+
+Server-streaming, client-streaming and bidi RPCs are generated too.
+
+| RPC | Service interface and client | In the sandbox |
+|---|---|---|
+| server streaming | `(request) => AsyncIterable<Reply>` | `ns.m(input, { limit?, timeoutMs? })` returns `{ messages, complete }` |
+| client streaming | `(requests: AsyncIterable<Request>) => Promise<Reply>` | `ns.m([input, ...])` returns the reply |
+| bidi | `(requests: AsyncIterable<Request>) => AsyncIterable<Reply>` | `ns.m([input, ...], { limit?, timeoutMs? })` returns `{ messages, complete }` |
+
+In the sandbox each is one call: approved as a whole, logged, and returned
+from the log on replay, so a stream is never opened twice. A server-streaming
+or bidi call reads until the stream ends, `limit` replies (default 100, at most
+1000) or `timeoutMs` (default 10 s, at most 60 s), then cancels it; `complete`
+is false when it was cut short. Bidi is a batch: a script cannot choose its
+next request from a reply, which replay could not reproduce.
+
+A streaming method's replay is always `log`, and it can neither have a revert
+nor be one. The generated client throws `UNIMPLEMENTED` on a transport without
+streaming, such as `httpTransport`; use `connectTransport`, with
+`http2Duplex()` for bidi.
+
 ## Templates
 
 The layout of every generated file lives in

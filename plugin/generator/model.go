@@ -136,6 +136,7 @@ type Method struct {
 	Replay      string // "log" or "reexecute"
 	ReadOnly    bool
 	Idempotent  bool
+	Streaming   string // "" for unary, else "server", "client" or "bidi"
 	Revert      *Revert
 	HTTP        *HTTPRule
 	Examples    []string

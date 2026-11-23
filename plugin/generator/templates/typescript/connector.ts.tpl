@@ -8,12 +8,13 @@ export function {{.Func}}(service: {{.Name}}, options: ConnectorOptions = {}): C
       namespace: {{str .Namespace}},
 {{if .Instructions}}      instructions: {{str .Instructions}},
 {{end}}      methods: [
-{{range .Methods}}        unaryMethod({
+{{range .Methods}}        {{if .Streaming}}{{.Streaming}}StreamMethod{{else}}unaryMethod{{end}}({
           name: {{str .Name}},
           input: {{.InputCodec}},
           output: {{.OutputCodec}},
           requiresApproval: {{.Approval}},
-          replay: {{str .Replay}},
+{{if not .Streaming}}          replay: {{str .Replay}},
+{{end}}
 {{if .ApprovalMsg}}          approvalMessage: {{str .ApprovalMsg}},
 {{end}}          call: (request, context) => service.{{.Client}}(request, { signal: context.signal }),
 {{with .Revert}}          revert: async ({{.Request}}, {{.Response}}, context) => {

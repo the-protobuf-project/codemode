@@ -38,7 +38,7 @@ test("the code tool runs code and returns structured output", async () => {
   const { tools } = await client.listTools();
   assert.deepEqual(
     tools.map((t) => t.name),
-    ["code", "codemode_approve", "codemode_reject"],
+    ["code", "codemode_status", "codemode_approve", "codemode_reject"],
   );
   const out = await client.callTool({
     name: "code",

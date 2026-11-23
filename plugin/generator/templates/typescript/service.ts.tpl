@@ -1,6 +1,10 @@
 {{.Doc}}export interface {{.Name}} {
 {{range $i, $m := .Methods}}{{if $i}}
-{{end}}{{$m.Doc}}  {{$m.Client}}(request: {{$m.Input}}, options?: CallOptions): Promise<{{$m.Output}}>;
+{{end}}{{$m.Doc}}  {{$m.Client}}(
+{{- if eq $m.Streaming "server"}}request: {{$m.Input}}, options?: CallOptions): AsyncIterable<{{$m.Output}}>
+{{- else if eq $m.Streaming "client"}}requests: AsyncIterable<{{$m.Input}}>, options?: CallOptions): Promise<{{$m.Output}}>
+{{- else if eq $m.Streaming "bidi"}}requests: AsyncIterable<{{$m.Input}}>, options?: CallOptions): AsyncIterable<{{$m.Output}}>
+{{- else}}request: {{$m.Input}}, options?: CallOptions): Promise<{{$m.Output}}>{{end}};
 {{end}}}
 
 /** Describes each {@link {{.Name}}} RPC for transports. */

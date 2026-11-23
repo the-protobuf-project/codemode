@@ -26,7 +26,14 @@ func (cat *Catalog) sandboxTypes() map[string]string {
 
 // sandboxMethod is the "method" template's data: one signature in a namespace.
 type sandboxMethod struct {
-	Doc, Name, Input, Output string
+	Doc, Name, Input, Output, Streaming string
+}
+
+// streamingNotes tells the model how each kind of streaming call behaves.
+var streamingNotes = map[string]string{
+	"server": "Server streaming: reads replies until the stream ends, options.limit or options.timeoutMs; complete is false when cut short.",
+	"client": "Client streaming: sends every request in inputs, then returns the one reply.",
+	"bidi":   "Bidi streaming: sends every request in inputs and reads replies until the stream ends, options.limit or options.timeoutMs; complete is false when cut short.",
 }
 
 func newSandboxMethod(m *Method) sandboxMethod {
@@ -38,8 +45,11 @@ func newSandboxMethod(m *Method) sandboxMethod {
 	if m.Revert != nil {
 		notes = append(notes, "Undone on rollback by "+m.Service.Namespace+"."+m.Revert.Method.Name+".")
 	}
+	if note := streamingNotes[m.Streaming]; note != "" {
+		notes = append(notes, note)
+	}
 	notes = append(notes, deprecated(isDeprecated(m.Proto.Desc))...)
-	return sandboxMethod{jsdoc("  ", m.Doc, notes...), m.Name, refType(m.Input, n), refType(m.Output, n)}
+	return sandboxMethod{jsdoc("  ", m.Doc, notes...), m.Name, refType(m.Input, n), refType(m.Output, n), m.Streaming}
 }
 
 // methodDecl is one method's signature inside its namespace declaration.

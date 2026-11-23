@@ -4,10 +4,10 @@
 import { StatusError } from "@the-protobuf-project/errors";
 import type { Empty } from "@the-protobuf-project/protobuf";
 import { libraryV1 } from "../gen/index.ts";
+import { importBooks, lookupBooks, streamBooks } from "./library_streams.ts";
 
 type Book = libraryV1.Book;
 type Shelf = libraryV1.Shelf;
-
 const { BookName, ShelfName } = libraryV1;
 
 /**
@@ -166,6 +166,10 @@ export class InMemoryLibrary implements libraryV1.LibraryService {
     this.count(req.destination);
     return moved;
   }
+
+  streamBooks = (req: libraryV1.StreamBooksRequest) => streamBooks(this, req);
+  importBooks = (reqs: AsyncIterable<libraryV1.ImportBooksRequest>) => importBooks(this, reqs);
+  lookupBooks = (reqs: AsyncIterable<libraryV1.LookupBooksRequest>) => lookupBooks(this, reqs);
 
   async archiveShelf(req: libraryV1.ArchiveShelfRequest): Promise<libraryV1.ArchiveShelfResponse> {
     this.shelf(req.name);

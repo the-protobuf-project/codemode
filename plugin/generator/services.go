@@ -46,9 +46,6 @@ func (cat *Catalog) addService(s *protogen.Service, f *protogen.File) error {
 	}
 	svc.Instructions = firstNonEmpty(opts.GetInstructions(), mcpOpts.GetApp().GetDescription(), svc.Doc)
 	for _, m := range s.Methods {
-		if m.Desc.IsStreamingClient() || m.Desc.IsStreamingServer() {
-			continue
-		}
 		meth, err := cat.method(svc, m)
 		if err != nil {
 			return err
@@ -133,7 +130,28 @@ func (cat *Catalog) method(svc *Service, m *protogen.Method) (*Method, error) {
 			meth.Replay = "reexecute"
 		}
 	}
+	if meth.Streaming = streamingKind(m.Desc); meth.Streaming != "" {
+		// A stream cannot be read again the same way, so a replay returns what it gave.
+		if opts.GetReplay() == codemodepb.Replay_REPLAY_REEXECUTE {
+			return nil, fmt.Errorf("%s: a streaming method cannot use REPLAY_REEXECUTE", m.Desc.FullName())
+		}
+		meth.Replay = "log"
+	}
 	return meth, nil
+}
+
+// streamingKind is "server", "client" or "bidi" for a streaming RPC, and ""
+// for a unary one.
+func streamingKind(md protoreflect.MethodDescriptor) string {
+	switch {
+	case md.IsStreamingClient() && md.IsStreamingServer():
+		return "bidi"
+	case md.IsStreamingClient():
+		return "client"
+	case md.IsStreamingServer():
+		return "server"
+	}
+	return ""
 }
 
 func firstNonEmpty(vals ...string) string {
