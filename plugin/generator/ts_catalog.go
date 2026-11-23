@@ -19,9 +19,9 @@ type catalogNamespace struct {
 
 // catalogMethod is one method in catalog.ts.
 type catalogMethod struct {
-	Path, Namespace, Name, RPC, Description, Replay, RevertedBy string
-	Approval, ReadOnly                                          bool
-	Decl, Types, Examples                                       string
+	Path, Namespace, Name, RPC, Description, Replay, RevertedBy, Streaming string
+	Approval, ReadOnly                                                     bool
+	Decl, Types, Examples                                                  string
 }
 
 // catalogSnippet is one snippet in catalog.ts.
@@ -71,7 +71,7 @@ func (cat *Catalog) emitCatalog(gen *protogen.Plugin) {
 		for _, m := range s.Methods {
 			cm := catalogMethod{
 				Path: m.Path, Namespace: s.Namespace, Name: m.Name, RPC: string(m.Proto.Desc.FullName()),
-				Description: m.Doc, Replay: m.Replay, Approval: m.Approval, ReadOnly: m.ReadOnly,
+				Description: m.Doc, Replay: m.Replay, Approval: m.Approval, ReadOnly: m.ReadOnly, Streaming: m.Streaming,
 				Decl: methodDecl(m), Types: quoteAll(typeClosure(m), tsString), Examples: quoteAll(m.Examples, tsTemplate),
 			}
 			if m.Revert != nil {

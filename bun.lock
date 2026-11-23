@@ -12,10 +12,10 @@
       "name": "@codemode-examples/library",
       "dependencies": {
         "@modelcontextprotocol/sdk": "^1.32.2",
-        "@the-protobuf-project/codemode": "^0.1.0",
-        "@the-protobuf-project/errors": "^0.1.0",
-        "@the-protobuf-project/network": "^0.1.0",
-        "@the-protobuf-project/protobuf": "^0.1.0",
+        "@the-protobuf-project/codemode": "^0.3.0",
+        "@the-protobuf-project/errors": "^0.3.0",
+        "@the-protobuf-project/network": "^0.3.0",
+        "@the-protobuf-project/protobuf": "^0.3.0",
         "quickjs-emscripten": "^0.32.0",
       },
       "devDependencies": {
@@ -80,13 +80,13 @@
 
     "@standard-schema/spec": ["@standard-schema/spec@1.1.0", "", {}, "sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w=="],
 
-    "@the-protobuf-project/codemode": ["@the-protobuf-project/codemode@0.1.0", "https://npm.pkg.github.com/download/@the-protobuf-project/codemode/0.1.0/ea249cbcf3db61c6e0afdd1fd3cf14d1525c1a17", { "dependencies": { "@the-protobuf-project/errors": "^0.1.0", "@the-protobuf-project/protobuf": "^0.1.0", "sucrase": "^3.35.1" }, "peerDependencies": { "@modelcontextprotocol/sdk": "^1.32.0", "ai": "^7.0.0", "quickjs-emscripten": "^0.32.0" } }, "sha512-nREkQBLZgB6RV73T/jjsi8ezTXtyVpC3xKT3RjM6ulHYyIpXWzamEwEnKG7adfuyjNNJ1jo4dAR8PCTqRwqOpw=="],
+    "@the-protobuf-project/codemode": ["@the-protobuf-project/codemode@0.3.0", "https://npm.pkg.github.com/download/@the-protobuf-project/codemode/0.3.0/c4f087ef86d50389ea0cdefb37427684d73b20a5", { "dependencies": { "@the-protobuf-project/errors": "^0.3.0", "@the-protobuf-project/network": "^0.3.0", "@the-protobuf-project/protobuf": "^0.3.0", "sucrase": "^3.35.1" }, "peerDependencies": { "@modelcontextprotocol/sdk": "^1.32.0", "ai": "^7.0.0", "quickjs-emscripten": "^0.32.0" } }, "sha512-lGGoAtdNSUq9mWRexIi29+AUJMGSTRQGyX59pAEM9g6ueM9MJbOL5w8fVu5Jc/+3sJQIR1gfr41FcAbdrNElFA=="],
 
-    "@the-protobuf-project/errors": ["@the-protobuf-project/errors@0.1.0", "https://npm.pkg.github.com/download/@the-protobuf-project/errors/0.1.0/505710a15715531e7d7d2b36e88dc09b43100da1", {}, "sha512-eOSLMffnqWuT6veArSvs0kh3e1AC4zk2TAke1YA8ERvxa5MXruZxQxSMAD6i0H5L0MUEls15r3L9GXb7Yk+mMQ=="],
+    "@the-protobuf-project/errors": ["@the-protobuf-project/errors@0.3.0", "https://npm.pkg.github.com/download/@the-protobuf-project/errors/0.3.0/b88fc88adce6cb80b6d8763d9034957d94347362", {}, "sha512-PIH+KV/ENybg42Tw7vpfOD7EdhQPXtT8B6NabIkAeLPXdyMu4yMyJntXoVjQpl33NtSW+sdt0x2LcsdwKv3gQw=="],
 
-    "@the-protobuf-project/network": ["@the-protobuf-project/network@0.1.0", "https://npm.pkg.github.com/download/@the-protobuf-project/network/0.1.0/b5ab10051fbfed52d4ce40b5eaec1d6fad94b205", { "dependencies": { "@the-protobuf-project/errors": "^0.1.0", "@the-protobuf-project/protobuf": "^0.1.0" } }, "sha512-Y/t43T8ClmpozfvX8cKtujEzGu3YPVpY31Cqq753w8l74HYrJEOmXw8btfedw3u+CFOfuwxjcx806rkvd+3eSg=="],
+    "@the-protobuf-project/network": ["@the-protobuf-project/network@0.3.0", "https://npm.pkg.github.com/download/@the-protobuf-project/network/0.3.0/f594eafa8278130d6189d9cb1868be727a6608b6", { "dependencies": { "@the-protobuf-project/errors": "^0.3.0", "@the-protobuf-project/protobuf": "^0.3.0" } }, "sha512-PNZ8ehw2m9RSFMkkkUGaOspTwxx4b2XoWpo2WvzsmiP3Wrg6DCMXa3V0YImMH5SuIELBWL5V6un92I7IHfMcVQ=="],
 
-    "@the-protobuf-project/protobuf": ["@the-protobuf-project/protobuf@0.1.0", "https://npm.pkg.github.com/download/@the-protobuf-project/protobuf/0.1.0/2c010f0075b8a9bf97a34fbdd3e9f5e8d81530ef", { "dependencies": { "@the-protobuf-project/errors": "^0.1.0" } }, "sha512-nVsexBLocN9j1h1Ef3evjCDrmlCczbJoQdeJdM+HUdh5SgAPrnABeXO5xl9E+KWgO+WBOMWA4E3ic9y5s3nP+g=="],
+    "@the-protobuf-project/protobuf": ["@the-protobuf-project/protobuf@0.3.0", "https://npm.pkg.github.com/download/@the-protobuf-project/protobuf/0.3.0/91e531b3328340fe814e357195b763006662c5fc", { "dependencies": { "@the-protobuf-project/errors": "^0.3.0" } }, "sha512-T5IGNloFtPDCDfyp7XlNuuCzuhrOiiajNaBX5tf0HPBbAySovtRXnYnzmIO6QjYbaeOPEtKhuwM3zmbSs7AVJg=="],
 
     "@types/bun": ["@types/bun@1.4.5", "", { "dependencies": { "bun-types": "1.4.5" } }, "sha512-DpgwNI9z0L1S0gtb45QLCWgwCUcMLnsHYMJHQvpNj7erGiCGBvpggltAIeARrtobNMKMuy0UP7i56tKKgwFs/Q=="],
 

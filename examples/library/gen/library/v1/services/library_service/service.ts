@@ -35,6 +35,14 @@ import {
 } from "../../messages/delete_shelf_request.ts";
 import { type GetBookRequest, GetBookRequestCodec } from "../../messages/get_book_request.ts";
 import { type GetShelfRequest, GetShelfRequestCodec } from "../../messages/get_shelf_request.ts";
+import {
+  type ImportBooksRequest,
+  ImportBooksRequestCodec,
+} from "../../messages/import_books_request.ts";
+import {
+  type ImportBooksResponse,
+  ImportBooksResponseCodec,
+} from "../../messages/import_books_response.ts";
 import { type LendBookRequest, LendBookRequestCodec } from "../../messages/lend_book_request.ts";
 import {
   type ListBooksRequest,
@@ -52,12 +60,20 @@ import {
   type ListShelvesResponse,
   ListShelvesResponseCodec,
 } from "../../messages/list_shelves_response.ts";
+import {
+  type LookupBooksRequest,
+  LookupBooksRequestCodec,
+} from "../../messages/lookup_books_request.ts";
 import { type MoveBookRequest, MoveBookRequestCodec } from "../../messages/move_book_request.ts";
 import {
   type ReturnBookRequest,
   ReturnBookRequestCodec,
 } from "../../messages/return_book_request.ts";
 import { type Shelf, ShelfCodec } from "../../messages/shelf.ts";
+import {
+  type StreamBooksRequest,
+  StreamBooksRequestCodec,
+} from "../../messages/stream_books_request.ts";
 import {
   type UpdateBookRequest,
   UpdateBookRequestCodec,
@@ -107,6 +123,15 @@ export interface LibraryService {
 
   /** Withdraws every book on a shelf from circulation. Needs approval. */
   archiveShelf(request: ArchiveShelfRequest, options?: CallOptions): Promise<ArchiveShelfResponse>;
+
+  /** Streams the books on a shelf, one at a time. */
+  streamBooks(request: StreamBooksRequest, options?: CallOptions): AsyncIterable<Book>;
+
+  /** Adds several books, sent one at a time, and reports how many were added. */
+  importBooks(requests: AsyncIterable<ImportBooksRequest>, options?: CallOptions): Promise<ImportBooksResponse>;
+
+  /** Looks up each book as its name arrives. */
+  lookupBooks(requests: AsyncIterable<LookupBooksRequest>, options?: CallOptions): AsyncIterable<Book>;
 }
 
 /** Describes each {@link LibraryService} RPC for transports. */
@@ -204,6 +229,24 @@ export const LibraryServiceDescriptor = {
       output: ArchiveShelfResponseCodec,
       http: { method: "POST", path: "/v1/{name=shelves/*}:archive", body: "*" },
     } satisfies MethodDescriptor<ArchiveShelfRequest, ArchiveShelfResponse>,
+    streamBooks: {
+      service: "library.v1.LibraryService",
+      name: "StreamBooks",
+      input: StreamBooksRequestCodec,
+      output: BookCodec,
+    } satisfies MethodDescriptor<StreamBooksRequest, Book>,
+    importBooks: {
+      service: "library.v1.LibraryService",
+      name: "ImportBooks",
+      input: ImportBooksRequestCodec,
+      output: ImportBooksResponseCodec,
+    } satisfies MethodDescriptor<ImportBooksRequest, ImportBooksResponse>,
+    lookupBooks: {
+      service: "library.v1.LibraryService",
+      name: "LookupBooks",
+      input: LookupBooksRequestCodec,
+      output: BookCodec,
+    } satisfies MethodDescriptor<LookupBooksRequest, Book>,
   },
 } as const;
 

@@ -155,6 +155,17 @@ service LibraryService {
     };
     option (mcp.v1.tool) = {destructive: true};
   }
+
+  // Streams the books on a shelf, one at a time.
+  rpc StreamBooks(StreamBooksRequest) returns (stream Book);
+
+  // Adds several books, sent one at a time, and reports how many were added.
+  rpc ImportBooks(stream ImportBooksRequest) returns (ImportBooksResponse) {
+    option (codemode.v1.method) = {approval: APPROVAL_REQUIRED};
+  }
+
+  // Looks up each book as its name arrives.
+  rpc LookupBooks(stream LookupBooksRequest) returns (stream Book);
 }
 
 // Request for ListShelves.
@@ -320,4 +331,39 @@ message MoveShelfInput {
   string from = 1 [(google.api.resource_reference).type = "library.example.com/Shelf"];
   // The shelf to move books to.
   string to = 2 [(google.api.resource_reference).type = "library.example.com/Shelf"];
+}
+
+// Request for StreamBooks.
+message StreamBooksRequest {
+  // The shelf whose books to stream.
+  string parent = 1 [
+    (google.api.field_behavior) = REQUIRED,
+    (google.api.resource_reference).type = "library.example.com/Shelf"
+  ];
+}
+
+// One book of an ImportBooks stream.
+message ImportBooksRequest {
+  // The shelf to add the book to.
+  string parent = 1 [
+    (google.api.field_behavior) = REQUIRED,
+    (google.api.resource_reference).type = "library.example.com/Shelf"
+  ];
+  // The book to add.
+  Book book = 2 [(google.api.field_behavior) = REQUIRED];
+}
+
+// One name of a LookupBooks stream.
+message LookupBooksRequest {
+  // The book to look up.
+  string name = 1 [
+    (google.api.field_behavior) = REQUIRED,
+    (google.api.resource_reference).type = "library.example.com/Book"
+  ];
+}
+
+// Response for ImportBooks.
+message ImportBooksResponse {
+  // How many books were added.
+  int32 imported = 1;
 }

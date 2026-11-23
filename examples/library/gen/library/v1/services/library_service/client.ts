@@ -6,6 +6,7 @@
 //
 // codemode — https://github.com/the-protobuf-project/codemode
 
+import { StatusError } from "@the-protobuf-project/errors";
 import type { CallOptions, Transport } from "@the-protobuf-project/network";
 import type { Empty } from "@the-protobuf-project/protobuf";
 import type { ArchiveShelfRequest } from "../../messages/archive_shelf_request.ts";
@@ -17,14 +18,18 @@ import type { DeleteBookRequest } from "../../messages/delete_book_request.ts";
 import type { DeleteShelfRequest } from "../../messages/delete_shelf_request.ts";
 import type { GetBookRequest } from "../../messages/get_book_request.ts";
 import type { GetShelfRequest } from "../../messages/get_shelf_request.ts";
+import type { ImportBooksRequest } from "../../messages/import_books_request.ts";
+import type { ImportBooksResponse } from "../../messages/import_books_response.ts";
 import type { LendBookRequest } from "../../messages/lend_book_request.ts";
 import type { ListBooksRequest } from "../../messages/list_books_request.ts";
 import type { ListBooksResponse } from "../../messages/list_books_response.ts";
 import type { ListShelvesRequest } from "../../messages/list_shelves_request.ts";
 import type { ListShelvesResponse } from "../../messages/list_shelves_response.ts";
+import type { LookupBooksRequest } from "../../messages/lookup_books_request.ts";
 import type { MoveBookRequest } from "../../messages/move_book_request.ts";
 import type { ReturnBookRequest } from "../../messages/return_book_request.ts";
 import type { Shelf } from "../../messages/shelf.ts";
+import type { StreamBooksRequest } from "../../messages/stream_books_request.ts";
 import type { UpdateBookRequest } from "../../messages/update_book_request.ts";
 import { type LibraryService, LibraryServiceDescriptor } from "./service.ts";
 
@@ -103,6 +108,30 @@ export class LibraryServiceClient implements LibraryService {
   /** Withdraws every book on a shelf from circulation. Needs approval. */
   archiveShelf(request: ArchiveShelfRequest, options?: CallOptions): Promise<ArchiveShelfResponse> {
     return this.transport.unary(LibraryServiceDescriptor.methods.archiveShelf, request, options);
+  }
+
+  /** Streams the books on a shelf, one at a time. */
+  streamBooks(request: StreamBooksRequest, options?: CallOptions): AsyncIterable<Book> {
+    if (!this.transport.serverStream) {
+      throw new StatusError("UNIMPLEMENTED", "streamBooks streams, and this transport does not: use connectTransport");
+    }
+    return this.transport.serverStream(LibraryServiceDescriptor.methods.streamBooks, request, options);
+  }
+
+  /** Adds several books, sent one at a time, and reports how many were added. */
+  importBooks(requests: AsyncIterable<ImportBooksRequest>, options?: CallOptions): Promise<ImportBooksResponse> {
+    if (!this.transport.clientStream) {
+      throw new StatusError("UNIMPLEMENTED", "importBooks streams, and this transport does not: use connectTransport");
+    }
+    return this.transport.clientStream(LibraryServiceDescriptor.methods.importBooks, requests, options);
+  }
+
+  /** Looks up each book as its name arrives. */
+  lookupBooks(requests: AsyncIterable<LookupBooksRequest>, options?: CallOptions): AsyncIterable<Book> {
+    if (!this.transport.bidiStream) {
+      throw new StatusError("UNIMPLEMENTED", "lookupBooks streams, and this transport does not: use connectTransport");
+    }
+    return this.transport.bidiStream(LibraryServiceDescriptor.methods.lookupBooks, requests, options);
   }
 }
 

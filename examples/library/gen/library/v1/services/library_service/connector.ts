@@ -9,7 +9,10 @@
 import {
   type Connector,
   type ConnectorOptions,
+  bidiStreamMethod,
+  clientStreamMethod,
   connector,
+  serverStreamMethod,
   unaryMethod,
 } from "@the-protobuf-project/codemode";
 import { EmptyCodec } from "@the-protobuf-project/protobuf";
@@ -28,17 +31,21 @@ import {
 } from "../../messages/delete_shelf_request.ts";
 import { GetBookRequestCodec } from "../../messages/get_book_request.ts";
 import { GetShelfRequestCodec } from "../../messages/get_shelf_request.ts";
+import { ImportBooksRequestCodec } from "../../messages/import_books_request.ts";
+import { ImportBooksResponseCodec } from "../../messages/import_books_response.ts";
 import { LendBookRequestCodec } from "../../messages/lend_book_request.ts";
 import { ListBooksRequestCodec } from "../../messages/list_books_request.ts";
 import { ListBooksResponseCodec } from "../../messages/list_books_response.ts";
 import { ListShelvesRequestCodec } from "../../messages/list_shelves_request.ts";
 import { ListShelvesResponseCodec } from "../../messages/list_shelves_response.ts";
+import { LookupBooksRequestCodec } from "../../messages/lookup_books_request.ts";
 import { MoveBookRequestCodec } from "../../messages/move_book_request.ts";
 import {
   type ReturnBookRequest,
   ReturnBookRequestCodec,
 } from "../../messages/return_book_request.ts";
 import { ShelfCodec } from "../../messages/shelf.ts";
+import { StreamBooksRequestCodec } from "../../messages/stream_books_request.ts";
 import { UpdateBookRequestCodec } from "../../messages/update_book_request.ts";
 import type { LibraryService } from "./service.ts";
 
@@ -58,6 +65,7 @@ export function libraryServiceConnector(service: LibraryService, options: Connec
           output: ListShelvesResponseCodec,
           requiresApproval: false,
           replay: "reexecute",
+
           call: (request, context) => service.listShelves(request, { signal: context.signal }),
         }),
         unaryMethod({
@@ -66,6 +74,7 @@ export function libraryServiceConnector(service: LibraryService, options: Connec
           output: ShelfCodec,
           requiresApproval: false,
           replay: "reexecute",
+
           call: (request, context) => service.getShelf(request, { signal: context.signal }),
         }),
         unaryMethod({
@@ -74,6 +83,7 @@ export function libraryServiceConnector(service: LibraryService, options: Connec
           output: ShelfCodec,
           requiresApproval: false,
           replay: "log",
+
           call: (request, context) => service.createShelf(request, { signal: context.signal }),
           revert: async (request, response, context) => {
             await service.deleteShelf({ force: request.forceRevert, name: response.name } as DeleteShelfRequest, { signal: context.signal });
@@ -85,6 +95,7 @@ export function libraryServiceConnector(service: LibraryService, options: Connec
           output: EmptyCodec,
           requiresApproval: false,
           replay: "log",
+
           call: (request, context) => service.deleteShelf(request, { signal: context.signal }),
         }),
         unaryMethod({
@@ -93,6 +104,7 @@ export function libraryServiceConnector(service: LibraryService, options: Connec
           output: ListBooksResponseCodec,
           requiresApproval: false,
           replay: "reexecute",
+
           call: (request, context) => service.listBooks(request, { signal: context.signal }),
         }),
         unaryMethod({
@@ -101,6 +113,7 @@ export function libraryServiceConnector(service: LibraryService, options: Connec
           output: BookCodec,
           requiresApproval: false,
           replay: "reexecute",
+
           call: (request, context) => service.getBook(request, { signal: context.signal }),
         }),
         unaryMethod({
@@ -109,6 +122,7 @@ export function libraryServiceConnector(service: LibraryService, options: Connec
           output: BookCodec,
           requiresApproval: false,
           replay: "log",
+
           call: (request, context) => service.createBook(request, { signal: context.signal }),
           revert: async (_request, response, context) => {
             await service.deleteBook({ name: response.name } as DeleteBookRequest, { signal: context.signal });
@@ -120,6 +134,7 @@ export function libraryServiceConnector(service: LibraryService, options: Connec
           output: BookCodec,
           requiresApproval: false,
           replay: "log",
+
           call: (request, context) => service.updateBook(request, { signal: context.signal }),
         }),
         unaryMethod({
@@ -128,6 +143,7 @@ export function libraryServiceConnector(service: LibraryService, options: Connec
           output: EmptyCodec,
           requiresApproval: false,
           replay: "log",
+
           call: (request, context) => service.deleteBook(request, { signal: context.signal }),
         }),
         unaryMethod({
@@ -136,6 +152,7 @@ export function libraryServiceConnector(service: LibraryService, options: Connec
           output: BookCodec,
           requiresApproval: false,
           replay: "log",
+
           call: (request, context) => service.lendBook(request, { signal: context.signal }),
           revert: async (_request, response, context) => {
             await service.returnBook({ name: response.name } as ReturnBookRequest, { signal: context.signal });
@@ -147,6 +164,7 @@ export function libraryServiceConnector(service: LibraryService, options: Connec
           output: BookCodec,
           requiresApproval: false,
           replay: "log",
+
           call: (request, context) => service.returnBook(request, { signal: context.signal }),
         }),
         unaryMethod({
@@ -155,6 +173,7 @@ export function libraryServiceConnector(service: LibraryService, options: Connec
           output: BookCodec,
           requiresApproval: true,
           replay: "log",
+
           approvalMessage: "Move this book to another shelf?",
           call: (request, context) => service.moveBook(request, { signal: context.signal }),
         }),
@@ -164,7 +183,32 @@ export function libraryServiceConnector(service: LibraryService, options: Connec
           output: ArchiveShelfResponseCodec,
           requiresApproval: true,
           replay: "log",
+
           call: (request, context) => service.archiveShelf(request, { signal: context.signal }),
+        }),
+        serverStreamMethod({
+          name: "streamBooks",
+          input: StreamBooksRequestCodec,
+          output: BookCodec,
+          requiresApproval: false,
+
+          call: (request, context) => service.streamBooks(request, { signal: context.signal }),
+        }),
+        clientStreamMethod({
+          name: "importBooks",
+          input: ImportBooksRequestCodec,
+          output: ImportBooksResponseCodec,
+          requiresApproval: true,
+
+          call: (request, context) => service.importBooks(request, { signal: context.signal }),
+        }),
+        bidiStreamMethod({
+          name: "lookupBooks",
+          input: LookupBooksRequestCodec,
+          output: BookCodec,
+          requiresApproval: false,
+
+          call: (request, context) => service.lookupBooks(request, { signal: context.signal }),
         }),
       ],
     },

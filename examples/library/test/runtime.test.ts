@@ -153,7 +153,7 @@ test("executions survive a new runtime on the same store", async () => {
 });
 
 test("the tool description lists namespaces, or inlines every type", async () => {
-  assert.match(setup().runtime.tool().description, /- library \(13 methods\)/);
+  assert.match(setup().runtime.tool().description, /- library \(16 methods\)/);
   const inline = setup({ discovery: "inline" }).runtime.tool().description;
   assert.match(inline, /declare const library/);
   assert.match(inline, /interface Book \{/);

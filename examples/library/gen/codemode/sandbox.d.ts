@@ -16,6 +16,11 @@ type Empty = Record<string, never>;
 /** google.protobuf.Any: "@type" plus the packed message's fields. */
 interface AnyMessage { "@type": string; [field: string]: unknown }
 
+/** How much of a stream a call reads: limit replies (default 100, at most 1000), timeoutMs (default 10000, at most 60000). */
+interface StreamOptions { limit?: number; timeoutMs?: number }
+/** A streaming call's replies; complete is false when limit or timeoutMs cut the stream short. */
+interface StreamResult<T> { messages: T[]; complete: boolean }
+
 /** A search hit: a method or a saved snippet. */
 interface CodemodeSearchResult {
   path: string;
@@ -284,6 +289,30 @@ interface GetShelfRequest {
   name: ShelfName;
 }
 
+/** One book of an ImportBooks stream. */
+interface ImportBooksRequest {
+  /**
+   * The shelf to add the book to.
+   *
+   * Resource name: `shelves/{shelf}`.
+   * Required.
+   */
+  parent: ShelfName;
+
+  /**
+   * The book to add.
+   *
+   * Required.
+   */
+  book: Book;
+}
+
+/** Response for ImportBooks. */
+interface ImportBooksResponse {
+  /** How many books were added. */
+  imported?: number;
+}
+
 /** Request for LendBook. */
 interface LendBookRequest {
   /**
@@ -350,6 +379,17 @@ interface ListShelvesResponse {
 
   /** Token for the next page; empty when there are no more. */
   nextPageToken?: string;
+}
+
+/** One name of a LookupBooks stream. */
+interface LookupBooksRequest {
+  /**
+   * The book to look up.
+   *
+   * Resource name: `shelves/{shelf}/books/{book}`.
+   * Required.
+   */
+  name: BookName;
 }
 
 /** Request for MoveBook. */
@@ -423,6 +463,17 @@ interface Shelf {
 
 /** Resource name of `library.example.com/Shelf`: `shelves/{shelf}`. */
 type ShelfName = `shelves/${string}`;
+
+/** Request for StreamBooks. */
+interface StreamBooksRequest {
+  /**
+   * The shelf whose books to stream.
+   *
+   * Resource name: `shelves/{shelf}`.
+   * Required.
+   */
+  parent: ShelfName;
+}
 
 /** Request for UpdateBook. */
 interface UpdateBookRequest {
@@ -509,4 +560,26 @@ declare const library: {
    * Requires approval: the execution pauses until a person approves this call.
    */
   archiveShelf(input: ArchiveShelfRequest): Promise<ArchiveShelfResponse>;
+
+  /**
+   * Streams the books on a shelf, one at a time.
+   *
+   * Server streaming: reads replies until the stream ends, options.limit or options.timeoutMs; complete is false when cut short.
+   */
+  streamBooks(input: StreamBooksRequest, options?: StreamOptions): Promise<StreamResult<Book>>;
+
+  /**
+   * Adds several books, sent one at a time, and reports how many were added.
+   *
+   * Requires approval: the execution pauses until a person approves this call.
+   * Client streaming: sends every request in inputs, then returns the one reply.
+   */
+  importBooks(inputs: ImportBooksRequest[]): Promise<ImportBooksResponse>;
+
+  /**
+   * Looks up each book as its name arrives.
+   *
+   * Bidi streaming: sends every request in inputs and reads replies until the stream ends, options.limit or options.timeoutMs; complete is false when cut short.
+   */
+  lookupBooks(inputs: LookupBooksRequest[], options?: StreamOptions): Promise<StreamResult<Book>>;
 };

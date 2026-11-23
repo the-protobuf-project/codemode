@@ -51,6 +51,8 @@ func (f *tsFile) add(spec, name string, typeOnly bool) {
 var runtimeModules = map[string]string{
 	"CallOptions": "network", "MethodDescriptor": "network", "Transport": "network",
 	"connector": "codemode", "unaryMethod": "codemode", "Connector": "codemode",
+	"serverStreamMethod": "codemode", "clientStreamMethod": "codemode", "bidiStreamMethod": "codemode",
+	"StatusError":      "errors",
 	"ConnectorOptions": "codemode", "Catalog": "codemode", "CodemodeConfig": "codemode",
 }
 

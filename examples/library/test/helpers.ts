@@ -7,8 +7,12 @@ import { connectHandler, connectTransport } from "@the-protobuf-project/network"
 import { catalog, config, connectors, libraryV1 } from "../gen/index.ts";
 import { InMemoryLibrary } from "../src/library.ts";
 
-/** A runtime over a fresh seeded library, reached through the generated client over Connect. */
-export function setup(options: { store?: Store; discovery?: "inline" | "progressive" } = {}) {
+/**
+ * A runtime over a fresh seeded library, reached through the generated client over Connect,
+ * or called in-process with direct: connectHandler serves unary calls only, so streaming
+ * RPCs are tested in-process (and against the Go and Rust servers in runtime-ts).
+ */
+export function setup(options: { store?: Store; discovery?: "inline" | "progressive"; direct?: boolean } = {}) {
   const library = InMemoryLibrary.seeded();
   const handler = connectHandler([{ descriptor: libraryV1.LibraryServiceDescriptor, impl: library }]);
   const client = new libraryV1.LibraryServiceClient(
@@ -21,7 +25,7 @@ export function setup(options: { store?: Store; discovery?: "inline" | "progress
       discovery: options.discovery ?? config.discovery,
       executor: { ...config.executor, timeoutMs: 2000 },
     },
-    connectors: connectors({ library: client }),
+    connectors: connectors({ library: options.direct ? library : client }),
     executor: new QuickJSExecutor(),
     store: options.store ?? new MemoryStore(),
   });

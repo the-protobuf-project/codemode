@@ -23,6 +23,7 @@ type methodView struct {
 	HTTP, Idempotency       string
 	Approval                bool
 	Replay, ApprovalMsg     string
+	Streaming               string // "" for unary, else "server", "client" or "bidi"
 	Revert                  *revertView
 }
 
@@ -42,7 +43,7 @@ func newServiceView(f *tsFile, s *Service, parts viewParts) serviceView {
 		mv := methodView{
 			Doc: jsdoc("  ", m.Doc, deprecated(isDeprecated(m.Proto.Desc))...), Name: m.Name, Client: m.Client(), RPC: string(m.Proto.Desc.Name()),
 			Idempotency: methodIdempotency(m.Proto.Desc),
-			Approval:    m.Approval, Replay: m.Replay, ApprovalMsg: m.ApprovalMsg,
+			Approval:    m.Approval, Replay: m.Replay, ApprovalMsg: m.ApprovalMsg, Streaming: m.Streaming,
 		}
 		if parts.types {
 			mv.Input, mv.Output = refType(m.Input, n), refType(m.Output, n)
@@ -80,13 +81,19 @@ func (cat *Catalog) emitService(gen *protogen.Plugin, s *Service) {
 
 	c := cat.newFile(s.Dir+"/client", s.Source)
 	c.runtimeType("CallOptions", "Transport")
+	if s.streams() {
+		c.runtime("StatusError")
+	}
 	c.local(s.Dir+"/service", s.Name+"Descriptor")
 	c.localType(s.Dir+"/service", s.Name)
 	c.render("client.ts.tpl", newServiceView(c, s, viewParts{types: true}))
 	c.emit(gen)
 
 	k := cat.newFile(s.Dir+"/connector", s.Source)
-	k.runtime("connector", "unaryMethod")
+	k.runtime("connector")
+	for _, m := range s.Methods {
+		k.runtime(connectorHelper(m.Streaming))
+	}
 	k.runtimeType("Connector", "ConnectorOptions")
 	k.localType(s.Dir+"/service", s.Name)
 	k.render("connector.ts.tpl", newServiceView(k, s, viewParts{codecs: true, reverts: true}))
@@ -97,6 +104,24 @@ func (cat *Catalog) emitService(gen *protogen.Plugin, s *Service) {
 		"./service" + ext, "./client" + ext, "./connector" + ext,
 	})
 	i.emit(gen)
+}
+
+// streams reports whether a service has a streaming method.
+func (s *Service) streams() bool {
+	for _, m := range s.Methods {
+		if m.Streaming != "" {
+			return true
+		}
+	}
+	return false
+}
+
+// connectorHelper is the runtime function that wraps a method of this kind.
+func connectorHelper(streaming string) string {
+	if streaming == "" {
+		return "unaryMethod"
+	}
+	return streaming + "StreamMethod"
 }
 
 // refCodec imports and returns the codec of an RPC input or output.
