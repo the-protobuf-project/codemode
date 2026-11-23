@@ -55,8 +55,8 @@ homebrew_casks:
     repository:
       owner: the-protobuf-project
       name: homebrew-tap
-      token: '{{ envOrDefault "HOMEBREW_TAP_GITHUB_TOKEN" "" }}'
-    skip_upload: '{{ if eq (envOrDefault "HOMEBREW_TAP_GITHUB_TOKEN" "") "" }}true{{ end }}'
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+    skip_upload: "{{ if not .Env.HOMEBREW_TAP_GITHUB_TOKEN }}true{{ end }}"
     directory: Casks
     homepage: https://github.com/the-protobuf-project/codemode
     description: Protoc plugin generating typed, sandboxed Code Mode APIs from gRPC protos
